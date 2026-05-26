@@ -7,5 +7,6 @@ public class OwnerListViewModel
     public string Phone { get; set; } = "";
     public string? Email { get; set; }
     public int PetCount { get; set; }
+    public List<string> PetNames { get; set; } = new();
     public DateTime CreatedAt { get; set; }
 }

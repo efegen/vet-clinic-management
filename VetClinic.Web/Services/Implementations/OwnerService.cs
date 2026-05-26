@@ -3,6 +3,7 @@ using VetClinic.Web.Helpers;
 using VetClinic.Web.Models.Entities;
 using VetClinic.Web.Repositories.Interfaces;
 using VetClinic.Web.Services.Interfaces;
+using VetClinic.Web.ViewModels.Common;
 using VetClinic.Web.ViewModels.Owners;
 
 namespace VetClinic.Web.Services.Implementations;
@@ -16,20 +17,26 @@ public class OwnerService : IOwnerService
         _ownerRepo = ownerRepo;
     }
 
-    public async Task<IEnumerable<OwnerListViewModel>> GetAllAsync()
+    public async Task<PagedResult<OwnerListViewModel>> GetPagedAsync(ListQueryParams query)
     {
-        var owners = await _ownerRepo.GetAllAsync();
-        return owners
-            .OrderBy(o => o.FullName)
-            .Select(o => new OwnerListViewModel
+        var (items, total) = await _ownerRepo.GetPagedAsync(query);
+
+        return new PagedResult<OwnerListViewModel>
+        {
+            Page = query.Page,
+            PageSize = query.PageSize,
+            TotalCount = total,
+            Items = items.Select(o => new OwnerListViewModel
             {
                 Id = o.Id,
                 FullName = o.FullName,
                 Phone = o.Phone,
                 Email = o.Email,
                 PetCount = o.Pets?.Count ?? 0,
+                PetNames = o.Pets?.OrderBy(p => p.Name).Select(p => p.Name).ToList() ?? new(),
                 CreatedAt = o.CreatedAt
-            });
+            }).ToList()
+        };
     }
 
     public async Task<OwnerDetailsViewModel?> GetDetailsAsync(int id)
