@@ -23,17 +23,26 @@ public class PagerModel
         return d;
     }
 
-    public static PagerModel From<T>(PagedResult<T> result, string? q, string? sort, string? dir, string action = "Index")
-        => new()
+    public static PagerModel From<T>(PagedResult<T> result, string? q, string? sort, string? dir,
+        IDictionary<string, string?>? filters = null, string action = "Index")
+    {
+        var routeValues = new Dictionary<string, string?>
+        {
+            ["q"] = q,
+            ["sort"] = sort,
+            ["dir"] = dir
+        };
+        if (filters is not null)
+        {
+            foreach (var (k, v) in filters) routeValues[k] = v;
+        }
+
+        return new PagerModel
         {
             Page = result.Page,
             TotalPages = result.TotalPages,
             Action = action,
-            RouteValues = new Dictionary<string, string?>
-            {
-                ["q"] = q,
-                ["sort"] = sort,
-                ["dir"] = dir
-            }
+            RouteValues = routeValues
         };
+    }
 }

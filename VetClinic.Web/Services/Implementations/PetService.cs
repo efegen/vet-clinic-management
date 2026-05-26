@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Mvc.Rendering;
 using VetClinic.Web.Helpers;
 using VetClinic.Web.Models.Entities;
+using VetClinic.Web.Models.Enums;
 using VetClinic.Web.Repositories.Interfaces;
 using VetClinic.Web.Services.Interfaces;
+using VetClinic.Web.ViewModels.Common;
 using VetClinic.Web.ViewModels.Pets;
 
 namespace VetClinic.Web.Services.Implementations;
@@ -22,19 +24,27 @@ public class PetService : IPetService
 
     public string CalculateAgeText(DateTime birthDate) => AgeCalculator.CalculateAgeText(birthDate);
 
-    public async Task<IEnumerable<PetListViewModel>> GetAllAsync()
+    public async Task<PagedResult<PetListViewModel>> GetPagedAsync(ListQueryParams query, PetSpecies? species)
     {
-        var pets = await _petRepo.GetAllWithOwnerAsync();
-        return pets.Select(p => new PetListViewModel
+        var (items, total) = await _petRepo.GetPagedAsync(query, species);
+
+        return new PagedResult<PetListViewModel>
         {
-            Id = p.Id,
-            Name = p.Name,
-            Species = p.Species.ToText(),
-            Breed = p.Breed,
-            AgeText = CalculateAgeText(p.BirthDate),
-            OwnerName = p.Owner.FullName,
-            OwnerId = p.OwnerId
-        });
+            Page = query.Page,
+            PageSize = query.PageSize,
+            TotalCount = total,
+            Items = items.Select(p => new PetListViewModel
+            {
+                Id = p.Id,
+                Name = p.Name,
+                SpeciesValue = p.Species,
+                Species = p.Species.ToText(),
+                Breed = p.Breed,
+                AgeText = CalculateAgeText(p.BirthDate),
+                OwnerName = p.Owner.FullName,
+                OwnerId = p.OwnerId
+            }).ToList()
+        };
     }
 
     public async Task<PetDetailsViewModel?> GetDetailsAsync(int id)
@@ -46,6 +56,7 @@ public class PetService : IPetService
         {
             Id = pet.Id,
             Name = pet.Name,
+            SpeciesValue = pet.Species,
             Species = pet.Species.ToText(),
             Breed = pet.Breed,
             Gender = pet.Gender.ToText(),
@@ -61,6 +72,7 @@ public class PetService : IPetService
                     Id = a.Id,
                     AppointmentDate = a.AppointmentDate,
                     ServiceName = a.Service.Name,
+                    StatusValue = a.Status,
                     Status = a.Status.ToText()
                 })
                 .ToList()

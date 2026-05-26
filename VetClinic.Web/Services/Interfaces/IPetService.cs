@@ -1,10 +1,12 @@
+using VetClinic.Web.Models.Enums;
+using VetClinic.Web.ViewModels.Common;
 using VetClinic.Web.ViewModels.Pets;
 
 namespace VetClinic.Web.Services.Interfaces;
 
 public interface IPetService
 {
-    Task<IEnumerable<PetListViewModel>> GetAllAsync();
+    Task<PagedResult<PetListViewModel>> GetPagedAsync(ListQueryParams query, PetSpecies? species);
     Task<PetDetailsViewModel?> GetDetailsAsync(int id);
     Task<PetCreateEditViewModel?> GetForEditAsync(int id);
     Task<PetCreateEditViewModel> BuildEmptyCreateAsync(int? ownerId = null);

@@ -1,0 +1,118 @@
+@model PetDetailsViewModel
+@{
+    ViewData["Title"] = Model.Name;
+}
+
+<div class="page-header">
+    <div>
+        <a class="text-decoration-none text-muted small" asp-action="Index">
+            <i class="bi bi-arrow-left me-1"></i>Hayvanlar
+        </a>
+        <h1 class="mt-1">
+            <i class="bi bi-heart-pulse text-primary"></i> @Model.Name
+            <span class="badge @Model.SpeciesValue.BadgeClass() align-middle ms-1">@Model.Species</span>
+        </h1>
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-primary" asp-action="Edit" asp-route-id="@Model.Id">
+            <i class="bi bi-pencil me-1"></i>Düzenle
+        </a>
+        <a class="btn btn-outline-danger" asp-action="Delete" asp-route-id="@Model.Id">
+            <i class="bi bi-trash me-1"></i>Sil
+        </a>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header"><i class="bi bi-clipboard2-pulse me-1 text-primary"></i>Künye</div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex justify-content-between">
+                    <span class="text-muted">Tür</span>
+                    <span class="badge @Model.SpeciesValue.BadgeClass()">@Model.Species</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <span class="text-muted">Cins</span>
+                    <span>@(string.IsNullOrWhiteSpace(Model.Breed) ? "—" : Model.Breed)</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <span class="text-muted">Cinsiyet</span>
+                    <span>@Model.Gender</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <span class="text-muted">Doğum Tarihi</span>
+                    <span>@Model.BirthDate.ToString("dd.MM.yyyy")</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <span class="text-muted">Yaş</span>
+                    <span>@Model.AgeText</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <span class="text-muted">Kilo</span>
+                    <span>@(Model.Weight.HasValue ? $"{Model.Weight} kg" : "—")</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span class="text-muted">Sahibi</span>
+                    <a class="text-decoration-none" asp-controller="Owners" asp-action="Details" asp-route-id="@Model.OwnerId">
+                        <i class="bi bi-person me-1"></i>@Model.OwnerName
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <span>
+                    <i class="bi bi-calendar2-week me-1 text-primary"></i>Randevu Geçmişi
+                    <span class="badge text-bg-light border ms-1">@Model.Appointments.Count</span>
+                </span>
+                <a class="btn btn-sm btn-primary" asp-controller="Appointments" asp-action="Create" asp-route-petId="@Model.Id">
+                    <i class="bi bi-plus-lg me-1"></i>Yeni Randevu
+                </a>
+            </div>
+            @if (Model.Appointments.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Tarih</th>
+                                <th>Hizmet</th>
+                                <th>Durum</th>
+                                <th class="text-end">İşlem</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var a in Model.Appointments)
+                            {
+                                <tr>
+                                    <td class="text-nowrap">@a.AppointmentDate.ToString("dd.MM.yyyy HH:mm")</td>
+                                    <td>@a.ServiceName</td>
+                                    <td><span class="badge @a.StatusValue.BadgeClass()">@a.Status</span></td>
+                                    <td class="text-end">
+                                        <a class="btn btn-sm btn-outline-secondary" asp-controller="Appointments" asp-action="Details" asp-route-id="@a.Id" title="Detaylar">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="empty-state py-4">
+                    <i class="bi bi-calendar2-x"></i>
+                    <p class="mb-3">Bu hayvana ait randevu kaydı yok.</p>
+                    <a class="btn btn-sm btn-primary" asp-controller="Appointments" asp-action="Create" asp-route-petId="@Model.Id">
+                        <i class="bi bi-plus-lg me-1"></i>İlk Randevuyu Oluştur
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</div>

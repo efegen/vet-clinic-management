@@ -1,0 +1,128 @@
+@model ListViewModel<PetListViewModel>
+@{
+    ViewData["Title"] = "Hayvanlar";
+    var r = Model.Result;
+    var selectedSpecies = Model.Filters.TryGetValue("species", out var sp) ? sp : null;
+    var hasQ = !string.IsNullOrWhiteSpace(Model.Q);
+    var hasFilter = hasQ || !string.IsNullOrWhiteSpace(selectedSpecies);
+
+    string SortIcon(string col) => Model.IsActiveSort(col)
+        ? (Model.IsDescending ? "bi-sort-down" : "bi-sort-up")
+        : "bi-arrow-down-up text-muted opacity-50";
+}
+
+<div class="page-header">
+    <div>
+        <h1><i class="bi bi-heart-pulse text-primary"></i> Hayvanlar</h1>
+        <span class="text-muted">Toplam @r.TotalCount kayıt@(hasFilter ? " · filtrelendi" : "")</span>
+    </div>
+    <a class="btn btn-primary" asp-action="Create">
+        <i class="bi bi-plus-lg me-1"></i>Yeni Hayvan
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <form method="get" asp-action="Index" class="row g-2 align-items-center">
+            <div class="col-12 col-md-auto flex-md-grow-1">
+                <div class="search-group">
+                    <span class="search-icon"><i class="bi bi-search"></i></span>
+                    <input type="search" name="q" value="@Model.Q" class="form-control"
+                           placeholder="Ad, cins veya sahip ara…" autocomplete="off" aria-label="Ara" />
+                </div>
+            </div>
+            <div class="col-6 col-md-auto">
+                <select name="species" class="form-select" onchange="this.form.submit()" aria-label="Tür filtresi">
+                    <option value="">Tüm türler</option>
+                    @foreach (var s in Enum.GetValues<PetSpecies>())
+                    {
+                        <option value="@s" selected="@(selectedSpecies == s.ToString())">@s.ToText()</option>
+                    }
+                </select>
+            </div>
+            <div class="col-6 col-md-auto">
+                <button class="btn btn-outline-primary w-100" type="submit"><i class="bi bi-funnel me-1"></i>Filtrele</button>
+            </div>
+            @if (hasFilter)
+            {
+                <div class="col-12 col-md-auto">
+                    <a class="btn btn-link text-muted text-decoration-none" asp-action="Index">
+                        <i class="bi bi-x-lg me-1"></i>Temizle
+                    </a>
+                </div>
+            }
+            <input type="hidden" name="sort" value="@Model.Sort" />
+            <input type="hidden" name="dir" value="@Model.Dir" />
+        </form>
+    </div>
+
+    @if (r.Items.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th style="width:3rem">#</th>
+                        <th><a class="th-sort" asp-action="Index" asp-all-route-data="@Model.SortRoute("name")">Ad <i class="bi @SortIcon("name") small"></i></a></th>
+                        <th><a class="th-sort" asp-action="Index" asp-all-route-data="@Model.SortRoute("species")">Tür <i class="bi @SortIcon("species") small"></i></a></th>
+                        <th>Cins</th>
+                        <th><a class="th-sort" asp-action="Index" asp-all-route-data="@Model.SortRoute("age")">Yaş <i class="bi @SortIcon("age") small"></i></a></th>
+                        <th><a class="th-sort" asp-action="Index" asp-all-route-data="@Model.SortRoute("owner")">Sahibi <i class="bi @SortIcon("owner") small"></i></a></th>
+                        <th class="text-end">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{ var i = r.FirstItemIndex; }
+                    @foreach (var pet in r.Items)
+                    {
+                        <tr>
+                            <td class="text-muted">@i</td>
+                            <td class="fw-semibold">@pet.Name</td>
+                            <td><span class="badge @pet.SpeciesValue.BadgeClass()">@pet.Species</span></td>
+                            <td>@(string.IsNullOrWhiteSpace(pet.Breed) ? "—" : pet.Breed)</td>
+                            <td class="text-muted text-nowrap">@pet.AgeText</td>
+                            <td>
+                                <a class="text-decoration-none" asp-controller="Owners" asp-action="Details" asp-route-id="@pet.OwnerId">
+                                    <i class="bi bi-person text-muted me-1"></i>@pet.OwnerName
+                                </a>
+                            </td>
+                            <td class="text-end">
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a class="btn btn-outline-secondary" asp-action="Details" asp-route-id="@pet.Id" title="Detaylar"><i class="bi bi-eye"></i></a>
+                                    <a class="btn btn-outline-primary" asp-action="Edit" asp-route-id="@pet.Id" title="Düzenle"><i class="bi bi-pencil"></i></a>
+                                    <a class="btn btn-outline-danger" asp-action="Delete" asp-route-id="@pet.Id" title="Sil"><i class="bi bi-trash"></i></a>
+                                </div>
+                            </td>
+                        </tr>
+                        i++;
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card-footer bg-white d-flex flex-wrap justify-content-between align-items-center gap-2 small text-muted">
+            <span>@r.FirstItemIndex–@r.LastItemIndex / @r.TotalCount kayıt</span>
+            <partial name="_Pager" model="PagerModel.From(r, Model.Q, Model.Sort, Model.Dir, Model.Filters)" />
+        </div>
+    }
+    else if (hasFilter)
+    {
+        <div class="empty-state">
+            <i class="bi bi-search"></i>
+            <p class="mb-3">Filtreyle eşleşen hayvan bulunamadı.</p>
+            <a class="btn btn-outline-secondary" asp-action="Index">
+                <i class="bi bi-arrow-counterclockwise me-1"></i>Filtreyi Temizle
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="empty-state">
+            <i class="bi bi-clipboard-x"></i>
+            <p class="mb-3">Henüz hayvan kaydı yok.</p>
+            <a class="btn btn-primary" asp-action="Create">
+                <i class="bi bi-plus-lg me-1"></i>İlk Hayvanı Ekle
+            </a>
+        </div>
+    }
+</div>
