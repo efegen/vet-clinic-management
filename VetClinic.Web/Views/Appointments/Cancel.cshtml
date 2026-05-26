@@ -1,0 +1,50 @@
+@model AppointmentDetailsViewModel
+@{
+    ViewData["Title"] = "Randevu İptal";
+}
+
+<div class="page-header">
+    <div>
+        <a class="text-decoration-none text-muted small" asp-action="Details" asp-route-id="@Model.Id">
+            <i class="bi bi-arrow-left me-1"></i>Randevu Detayı
+        </a>
+        <h1 class="mt-1 text-warning-emphasis"><i class="bi bi-x-circle"></i> Randevuyu İptal Et</h1>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8 col-xl-7">
+        <div class="card border-warning-subtle">
+            <div class="card-header bg-warning-subtle text-warning-emphasis">
+                <i class="bi bi-info-circle me-1"></i>İptal edilen randevu silinmez; kaydı korunur (raporlama için)
+            </div>
+            <div class="card-body p-4">
+                <dl class="row mb-3">
+                    <dt class="col-sm-3 text-muted fw-normal">Tarih</dt>
+                    <dd class="col-sm-9">@Model.AppointmentDate.ToString("dd.MM.yyyy HH:mm")</dd>
+
+                    <dt class="col-sm-3 text-muted fw-normal">Hayvan</dt>
+                    <dd class="col-sm-9">@Model.PetName (@Model.OwnerName)</dd>
+
+                    <dt class="col-sm-3 text-muted fw-normal">Hizmet</dt>
+                    <dd class="col-sm-9">@Model.ServiceName</dd>
+                </dl>
+
+                <form asp-action="Cancel" asp-route-id="@Model.Id" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="mb-3">
+                        <label for="reason" class="form-label">İptal Sebebi <span class="required-mark">*</span></label>
+                        <textarea name="reason" id="reason" class="form-control" rows="3" required
+                                  maxlength="500" placeholder="Örn. Müşteri talebiyle iptal edildi"></textarea>
+                    </div>
+                    <div class="d-flex justify-content-end gap-2">
+                        <a class="btn btn-light border" asp-action="Details" asp-route-id="@Model.Id">Vazgeç</a>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="bi bi-x-circle me-1"></i>Randevuyu İptal Et
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

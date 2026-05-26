@@ -1,3 +1,5 @@
+using VetClinic.Web.Models.Enums;
+
 namespace VetClinic.Web.ViewModels.Appointments;
 
 public class AppointmentDetailsViewModel
@@ -5,6 +7,7 @@ public class AppointmentDetailsViewModel
     public int Id { get; set; }
     public DateTime AppointmentDate { get; set; }
     public DateTime EndTime { get; set; }   // Start + service duration (snapshot)
+    public AppointmentStatus StatusValue { get; set; }
     public string Status { get; set; } = "";
     public string? Notes { get; set; }
     public DateTime CreatedAt { get; set; }

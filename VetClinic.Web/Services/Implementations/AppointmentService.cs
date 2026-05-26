@@ -5,6 +5,7 @@ using VetClinic.Web.Models.Enums;
 using VetClinic.Web.Repositories.Interfaces;
 using VetClinic.Web.Services.Interfaces;
 using VetClinic.Web.ViewModels.Appointments;
+using VetClinic.Web.ViewModels.Common;
 
 namespace VetClinic.Web.Services.Implementations;
 
@@ -30,19 +31,58 @@ public class AppointmentService : IAppointmentService
         _logger = logger;
     }
 
-    public async Task<IEnumerable<AppointmentListViewModel>> GetAllAsync(
-        DateTime? from = null, DateTime? to = null, AppointmentStatus? status = null)
+    public async Task<PagedResult<AppointmentListViewModel>> GetPagedAsync(
+        ListQueryParams query, DateTime? from, DateTime? to, AppointmentStatus? status)
     {
-        var appointments = await _appointmentRepo.GetAllWithDetailsAsync();
+        var (items, total) = await _appointmentRepo.GetPagedAsync(query, from, to, status);
 
-        if (from.HasValue)
-            appointments = appointments.Where(a => a.AppointmentDate >= from.Value.Date);
-        if (to.HasValue)
-            appointments = appointments.Where(a => a.AppointmentDate < to.Value.Date.AddDays(1));
-        if (status.HasValue)
-            appointments = appointments.Where(a => a.Status == status.Value);
+        return new PagedResult<AppointmentListViewModel>
+        {
+            Page = query.Page,
+            PageSize = query.PageSize,
+            TotalCount = total,
+            Items = items.Select(MapToList).ToList()
+        };
+    }
 
-        return appointments.Select(MapToList);
+    public async Task<CalendarViewModel> GetWeekAsync(DateTime anyDateInWeek)
+    {
+        var date = anyDateInWeek.Date;
+        // Pazartesi'yi bul.
+        int diff = (7 + (date.DayOfWeek - DayOfWeek.Monday)) % 7;
+        var weekStart = date.AddDays(-diff);
+        var weekEnd = weekStart.AddDays(6);
+
+        var appointments = await _appointmentRepo.GetByDateRangeAsync(weekStart, weekEnd.AddDays(1).AddTicks(-1));
+
+        var vm = new CalendarViewModel { WeekStart = weekStart, WeekEnd = weekEnd };
+
+        for (int i = 0; i < 7; i++)
+        {
+            var day = weekStart.AddDays(i);
+            vm.Days.Add(new CalendarDayViewModel
+            {
+                Date = day,
+                IsToday = day == DateTime.Today,
+                IsClosed = day.DayOfWeek == DayOfWeek.Sunday,
+                Items = appointments
+                    .Where(a => a.AppointmentDate.Date == day)
+                    .OrderBy(a => a.AppointmentDate)
+                    .Select(a => new CalendarItemViewModel
+                    {
+                        Id = a.Id,
+                        Start = a.AppointmentDate,
+                        End = a.EndTime,
+                        PetName = a.Pet.Name,
+                        ServiceName = a.Service.Name,
+                        StatusValue = a.Status,
+                        Status = a.Status.ToText()
+                    })
+                    .ToList()
+            });
+        }
+
+        return vm;
     }
 
     public async Task<AppointmentDetailsViewModel?> GetDetailsAsync(int id)
@@ -55,6 +95,7 @@ public class AppointmentService : IAppointmentService
             Id = a.Id,
             AppointmentDate = a.AppointmentDate,
             EndTime = a.EndTime,
+            StatusValue = a.Status,
             Status = a.Status.ToText(),
             Notes = a.Notes,
             CreatedAt = a.CreatedAt,
@@ -238,8 +279,11 @@ public class AppointmentService : IAppointmentService
         Id = a.Id,
         AppointmentDate = a.AppointmentDate,
         PetName = a.Pet.Name,
+        PetId = a.PetId,
         OwnerName = a.Pet.Owner.FullName,
+        OwnerId = a.Pet.OwnerId,
         ServiceName = a.Service.Name,
+        StatusValue = a.Status,
         Status = a.Status.ToText(),
         DurationMinutes = (int)(a.EndTime - a.AppointmentDate).TotalMinutes
     };

@@ -1,12 +1,16 @@
 using VetClinic.Web.Models.Enums;
 using VetClinic.Web.ViewModels.Appointments;
+using VetClinic.Web.ViewModels.Common;
 
 namespace VetClinic.Web.Services.Interfaces;
 
 public interface IAppointmentService
 {
-    Task<IEnumerable<AppointmentListViewModel>> GetAllAsync(
-        DateTime? from = null, DateTime? to = null, AppointmentStatus? status = null);
+    Task<PagedResult<AppointmentListViewModel>> GetPagedAsync(
+        ListQueryParams query, DateTime? from, DateTime? to, AppointmentStatus? status);
+
+    // Belirtilen tarihi içeren haftanın (Pazartesi–Pazar) takvim görünümü.
+    Task<CalendarViewModel> GetWeekAsync(DateTime anyDateInWeek);
 
     Task<AppointmentDetailsViewModel?> GetDetailsAsync(int id);
     Task<AppointmentCreateEditViewModel?> GetForEditAsync(int id);

@@ -71,8 +71,11 @@ public class DashboardService : IDashboardService
         Id = a.Id,
         AppointmentDate = a.AppointmentDate,
         PetName = a.Pet.Name,
+        PetId = a.PetId,
         OwnerName = a.Pet.Owner.FullName,
+        OwnerId = a.Pet.OwnerId,
         ServiceName = a.Service.Name,
+        StatusValue = a.Status,
         Status = a.Status.ToText(),
         DurationMinutes = (int)(a.EndTime - a.AppointmentDate).TotalMinutes
     };

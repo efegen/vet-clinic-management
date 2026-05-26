@@ -3,6 +3,7 @@ using VetClinic.Web.Data;
 using VetClinic.Web.Models.Entities;
 using VetClinic.Web.Models.Enums;
 using VetClinic.Web.Repositories.Interfaces;
+using VetClinic.Web.ViewModels.Common;
 
 namespace VetClinic.Web.Repositories.Implementations;
 
@@ -10,6 +11,51 @@ public class AppointmentRepository : Repository<Appointment>, IAppointmentReposi
 {
     public AppointmentRepository(ApplicationDbContext context) : base(context)
     {
+    }
+
+    public async Task<(IReadOnlyList<Appointment> Items, int Total)> GetPagedAsync(
+        ListQueryParams query, DateTime? from, DateTime? to, AppointmentStatus? status)
+    {
+        IQueryable<Appointment> q = _context.Appointments
+            .Include(a => a.Pet).ThenInclude(p => p.Owner)
+            .Include(a => a.Service);
+
+        var term = query.NormalizedQ;
+        if (term is not null)
+        {
+            var pattern = $"%{term}%";
+            q = q.Where(a =>
+                EF.Functions.Like(a.Pet.Name, pattern) ||
+                EF.Functions.Like(a.Pet.Owner.FullName, pattern) ||
+                EF.Functions.Like(a.Service.Name, pattern));
+        }
+
+        if (from.HasValue)
+            q = q.Where(a => a.AppointmentDate >= from.Value.Date);
+        if (to.HasValue)
+            q = q.Where(a => a.AppointmentDate < to.Value.Date.AddDays(1));
+        if (status.HasValue)
+            q = q.Where(a => a.Status == status.Value);
+
+        var total = await q.CountAsync();
+
+        q = (query.Sort?.ToLowerInvariant(), query.Descending) switch
+        {
+            ("pet", false) => q.OrderBy(a => a.Pet.Name),
+            ("pet", true) => q.OrderByDescending(a => a.Pet.Name),
+            ("owner", false) => q.OrderBy(a => a.Pet.Owner.FullName),
+            ("owner", true) => q.OrderByDescending(a => a.Pet.Owner.FullName),
+            ("service", false) => q.OrderBy(a => a.Service.Name),
+            ("service", true) => q.OrderByDescending(a => a.Service.Name),
+            ("status", false) => q.OrderBy(a => a.Status),
+            ("status", true) => q.OrderByDescending(a => a.Status),
+            ("date", false) => q.OrderBy(a => a.AppointmentDate),
+            // Varsayılan: en yeni/yaklaşan tarih önce.
+            _ => q.OrderByDescending(a => a.AppointmentDate),
+        };
+
+        var items = await q.Skip(query.Skip).Take(query.PageSize).ToListAsync();
+        return (items, total);
     }
 
     public async Task<IEnumerable<Appointment>> GetAllWithDetailsAsync()

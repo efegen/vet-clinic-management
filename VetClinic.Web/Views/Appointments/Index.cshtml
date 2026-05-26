@@ -1,0 +1,97 @@
+@model CalendarViewModel
+@{
+    ViewData["Title"] = "Randevular — Takvim";
+    var tr = new System.Globalization.CultureInfo("tr-TR");
+
+    string ItemClass(AppointmentStatus s) => s switch
+    {
+        AppointmentStatus.Beklemede => "cal-item--warning",
+        AppointmentStatus.Onaylandi => "cal-item--info",
+        AppointmentStatus.Tamamlandi => "cal-item--success",
+        AppointmentStatus.IptalEdildi => "cal-item--secondary",
+        _ => ""
+    };
+}
+
+<div class="page-header">
+    <div>
+        <h1><i class="bi bi-calendar3 text-primary"></i> Randevular</h1>
+        <span class="text-muted">@Model.WeekStart.ToString("d MMMM", tr) – @Model.WeekEnd.ToString("d MMMM yyyy", tr)</span>
+    </div>
+    <div class="d-flex gap-2">
+        <partial name="_ViewToggle" />
+        <a class="btn btn-primary" asp-action="Create"><i class="bi bi-plus-lg me-1"></i>Yeni Randevu</a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex align-items-center justify-content-between">
+        <div class="btn-group">
+            <a class="btn btn-sm btn-outline-secondary" asp-action="Index" asp-route-week="@Model.PreviousWeek.ToString("yyyy-MM-dd")" title="Önceki hafta">
+                <i class="bi bi-chevron-left"></i>
+            </a>
+            <a class="btn btn-sm @(Model.IsCurrentWeek ? "btn-secondary" : "btn-outline-secondary")" asp-action="Index">Bugün</a>
+            <a class="btn btn-sm btn-outline-secondary" asp-action="Index" asp-route-week="@Model.NextWeek.ToString("yyyy-MM-dd")" title="Sonraki hafta">
+                <i class="bi bi-chevron-right"></i>
+            </a>
+        </div>
+        <span class="text-muted small d-none d-md-inline">Mesai 09:00–19:00 · Pazar kapalı</span>
+    </div>
+
+    <div class="card-body p-0">
+        <div class="cal">
+            <div class="cal-head">
+                <div class="cal-gutter-head"></div>
+                @foreach (var day in Model.Days)
+                {
+                    <div class="cal-dayhead @(day.IsToday ? "is-today" : "") @(day.IsClosed ? "is-closed" : "")">
+                        <div class="cal-dayname">@day.Date.ToString("dddd", tr)</div>
+                        <div class="cal-daydate">@day.Date.ToString("dd.MM")</div>
+                    </div>
+                }
+            </div>
+
+            <div class="cal-body" style="--cal-minutes:@Model.TotalMinutes;">
+                <div class="cal-gutter">
+                    @for (int h = Model.StartHour; h < Model.EndHour; h++)
+                    {
+                        <div class="cal-hour-label">@h.ToString("00"):00</div>
+                    }
+                </div>
+
+                @foreach (var day in Model.Days)
+                {
+                    <div class="cal-col @(day.IsToday ? "is-today" : "") @(day.IsClosed ? "is-closed" : "")">
+                        @for (int h = Model.StartHour; h < Model.EndHour; h++)
+                        {
+                            <div class="cal-hourline"></div>
+                        }
+
+                        @if (day.IsToday && Model.IsCurrentWeek)
+                        {
+                            var nowMin = (DateTime.Now - day.Date.AddHours(Model.StartHour)).TotalMinutes;
+                            if (nowMin >= 0 && nowMin <= Model.TotalMinutes)
+                            {
+                                <div class="cal-now" style="top:@(nowMin.ToString("0", System.Globalization.CultureInfo.InvariantCulture))px;"></div>
+                            }
+                        }
+
+                        @foreach (var item in day.Items)
+                        {
+                            var top = (item.Start - day.Date.AddHours(Model.StartHour)).TotalMinutes;
+                            if (top < 0) { top = 0; }
+                            var height = Math.Max(item.DurationMinutes, 26);
+                            <a class="cal-item @ItemClass(item.StatusValue)"
+                               style="top:@(top.ToString("0", System.Globalization.CultureInfo.InvariantCulture))px; height:@(height)px;"
+                               asp-action="Details" asp-route-id="@item.Id"
+                               title="@item.Start.ToString("HH:mm")–@item.End.ToString("HH:mm") · @item.PetName · @item.ServiceName (@item.Status)">
+                                <div class="cal-item-time">@item.Start.ToString("HH:mm") @item.PetName</div>
+                                <div class="cal-item-sub">@item.ServiceName</div>
+                            </a>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

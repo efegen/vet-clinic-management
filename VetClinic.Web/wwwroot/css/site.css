@@ -50,6 +50,21 @@ body {
     --bs-btn-active-border-color: var(--app-primary-dark);
 }
 
+/* Soft, açık gri hover (Bootstrap'in koyu gri dolgusu yerine) */
+.btn-outline-secondary {
+    --bs-btn-color: #475569;
+    --bs-btn-border-color: #cbd5e1;
+    --bs-btn-hover-bg: #f1f5f9;
+    --bs-btn-hover-border-color: #94a3b8;
+    --bs-btn-hover-color: #1f2937;
+    --bs-btn-active-bg: #e2e8f0;
+    --bs-btn-active-border-color: #94a3b8;
+    --bs-btn-active-color: #1f2937;
+}
+
+/* Buton içi ikon hizalaması (ikon + yazı dikeyde ortalı) */
+.btn .bi { vertical-align: -.125em; line-height: 1; }
+
 .btn:focus, .btn:active:focus, .form-control:focus, .form-select:focus, .form-check-input:focus {
     box-shadow: 0 0 0 0.2rem rgba(13, 148, 136, 0.25);
     border-color: var(--app-primary);
@@ -158,6 +173,102 @@ body {
 
 /* Hatasızken validation summary kutusunu gizle */
 .validation-summary-valid { display: none; }
+
+/* --- Haftalık takvim --- */
+.cal { overflow-x: auto; }
+.cal-head,
+.cal-body {
+    display: grid;
+    grid-template-columns: 56px repeat(7, minmax(120px, 1fr));
+    min-width: 860px;
+}
+
+.cal-dayhead {
+    padding: .5rem .25rem;
+    text-align: center;
+    border-left: 1px solid rgba(15, 23, 42, .06);
+    border-bottom: 1px solid rgba(15, 23, 42, .08);
+}
+
+.cal-gutter-head { border-bottom: 1px solid rgba(15, 23, 42, .08); }
+.cal-dayhead .cal-dayname { font-size: .75rem; text-transform: capitalize; color: #64748b; }
+.cal-dayhead .cal-daydate { font-weight: 700; }
+
+/* Bugün: üstte teal vurgu, tarih teal pill */
+.cal-dayhead.is-today {
+    background: rgba(13, 148, 136, .12);
+    border-top: 3px solid var(--app-primary);
+}
+.cal-dayhead.is-today .cal-dayname { color: var(--app-primary-dark); font-weight: 600; }
+.cal-dayhead.is-today .cal-daydate {
+    display: inline-block;
+    min-width: 2rem;
+    margin-top: .15rem;
+    padding: .05rem .45rem;
+    background: var(--app-primary);
+    color: #fff;
+    border-radius: 999px;
+}
+.cal-dayhead.is-closed { background: #f8fafc; }
+.cal-dayhead.is-closed .cal-dayname::after { content: " · Kapalı"; }
+
+/* gövde: 1px = 1 dakika */
+.cal-gutter { position: relative; }
+.cal-hour-label {
+    height: 60px;
+    font-size: .72rem;
+    color: #94a3b8;
+    text-align: right;
+    padding-right: .4rem;
+    transform: translateY(-.5em);
+}
+
+.cal-col {
+    position: relative;
+    height: calc(var(--cal-minutes) * 1px);
+    border-left: 1px solid rgba(15, 23, 42, .06);
+}
+
+.cal-col.is-today { background: rgba(13, 148, 136, .06); box-shadow: inset 1px 0 0 var(--app-primary), inset -1px 0 0 var(--app-primary); }
+.cal-col.is-closed { background: repeating-linear-gradient(45deg, #f8fafc, #f8fafc 10px, #f1f5f9 10px, #f1f5f9 20px); }
+
+.cal-hourline { height: 60px; border-bottom: 1px solid rgba(15, 23, 42, .06); }
+
+.cal-now {
+    position: absolute;
+    left: 0; right: 0;
+    height: 0;
+    border-top: 2px solid #ef4444;
+    z-index: 3;
+}
+.cal-now::before {
+    content: "";
+    position: absolute;
+    left: -1px; top: -4px;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #ef4444;
+}
+
+.cal-item {
+    position: absolute;
+    left: 3px; right: 3px;
+    border-radius: .4rem;
+    padding: .15rem .4rem;
+    overflow: hidden;
+    text-decoration: none;
+    border-left: 3px solid transparent;
+    z-index: 2;
+    transition: filter .12s ease, box-shadow .12s ease;
+}
+.cal-item:hover { filter: brightness(.97); box-shadow: 0 2px 8px rgba(15, 23, 42, .15); }
+.cal-item-time { font-size: .74rem; font-weight: 700; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cal-item-sub { font-size: .7rem; line-height: 1.1; opacity: .8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.cal-item--warning   { background: #fff7e6; border-left-color: #f59e0b; color: #92400e; }
+.cal-item--info      { background: #e6f6fb; border-left-color: #0ea5e9; color: #075985; }
+.cal-item--success   { background: #e9f9ef; border-left-color: #22c55e; color: #166534; }
+.cal-item--secondary { background: #f1f5f9; border-left-color: #94a3b8; color: #64748b; text-decoration: line-through; }
 
 /* --- Gömülü arama kutusu --- */
 .search-group {

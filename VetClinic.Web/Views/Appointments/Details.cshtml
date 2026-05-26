@@ -1,0 +1,109 @@
+@model AppointmentDetailsViewModel
+@{
+    ViewData["Title"] = "Randevu Detayı";
+    var canConfirm = Model.StatusValue == AppointmentStatus.Beklemede;
+    var canComplete = Model.StatusValue == AppointmentStatus.Onaylandi;
+    var canCancel = Model.StatusValue is AppointmentStatus.Beklemede or AppointmentStatus.Onaylandi;
+}
+
+<div class="page-header">
+    <div>
+        <a class="text-decoration-none text-muted small" asp-action="Index">
+            <i class="bi bi-arrow-left me-1"></i>Randevular
+        </a>
+        <h1 class="mt-1">
+            <i class="bi bi-calendar2-week text-primary"></i> Randevu
+            <span class="badge @Model.StatusValue.BadgeClass() align-middle ms-1">@Model.Status</span>
+        </h1>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        @if (canConfirm)
+        {
+            <form asp-action="Confirm" asp-route-id="@Model.Id" method="post">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-info text-white"><i class="bi bi-check-circle me-1"></i>Onayla</button>
+            </form>
+        }
+        @if (canComplete)
+        {
+            <form asp-action="Complete" asp-route-id="@Model.Id" method="post">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-success"><i class="bi bi-check2-all me-1"></i>Tamamla</button>
+            </form>
+        }
+        @if (canCancel)
+        {
+            <a class="btn btn-outline-warning" asp-action="Cancel" asp-route-id="@Model.Id"><i class="bi bi-x-circle me-1"></i>İptal Et</a>
+            <a class="btn btn-outline-primary" asp-action="Edit" asp-route-id="@Model.Id"><i class="bi bi-pencil me-1"></i>Düzenle</a>
+        }
+        <a class="btn btn-outline-danger" asp-action="Delete" asp-route-id="@Model.Id"><i class="bi bi-trash me-1"></i>Sil</a>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="card h-100">
+            <div class="card-header"><i class="bi bi-info-circle me-1 text-primary"></i>Randevu Bilgileri</div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex justify-content-between">
+                    <span class="text-muted">Tarih</span>
+                    <span class="fw-semibold">@Model.AppointmentDate.ToString("dd.MM.yyyy")</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <span class="text-muted">Saat</span>
+                    <span>@Model.AppointmentDate.ToString("HH:mm") – @Model.EndTime.ToString("HH:mm")</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <span class="text-muted">Hizmet</span>
+                    <span>@Model.ServiceName</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <span class="text-muted">Ücret (randevu anı)</span>
+                    <span class="fw-semibold">@Model.ServicePrice.ToPriceDisplay()</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <span class="text-muted">Durum</span>
+                    <span class="badge @Model.StatusValue.BadgeClass()">@Model.Status</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between text-muted small">
+                    <span>Oluşturulma</span>
+                    <span>@Model.CreatedAt.ToString("dd.MM.yyyy HH:mm")</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card mb-3">
+            <div class="card-header"><i class="bi bi-heart-pulse me-1 text-primary"></i>Hayvan & Sahip</div>
+            <div class="card-body">
+                <div class="mb-2">
+                    <div class="text-muted small">Hayvan</div>
+                    <a class="text-decoration-none fw-semibold" asp-controller="Pets" asp-action="Details" asp-route-id="@Model.PetId">
+                        <i class="bi bi-heart-pulse me-1"></i>@Model.PetName
+                    </a>
+                </div>
+                <div>
+                    <div class="text-muted small">Sahibi</div>
+                    <a class="text-decoration-none" asp-controller="Owners" asp-action="Details" asp-route-id="@Model.OwnerId">
+                        <i class="bi bi-person me-1"></i>@Model.OwnerName
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><i class="bi bi-journal-text me-1 text-primary"></i>Notlar</div>
+            <div class="card-body">
+                @if (string.IsNullOrWhiteSpace(Model.Notes))
+                {
+                    <span class="text-muted">Not eklenmemiş.</span>
+                }
+                else
+                {
+                    <p class="mb-0" style="white-space: pre-wrap;">@Model.Notes</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>

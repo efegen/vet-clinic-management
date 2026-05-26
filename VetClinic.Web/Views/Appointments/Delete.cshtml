@@ -1,0 +1,53 @@
+@model AppointmentDetailsViewModel
+@{
+    ViewData["Title"] = "Randevu Sil";
+}
+
+<div class="page-header">
+    <div>
+        <a class="text-decoration-none text-muted small" asp-action="Details" asp-route-id="@Model.Id">
+            <i class="bi bi-arrow-left me-1"></i>Randevu Detayı
+        </a>
+        <h1 class="mt-1 text-danger"><i class="bi bi-exclamation-triangle"></i> Randevuyu Sil</h1>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8 col-xl-7">
+        <div class="card border-danger-subtle">
+            <div class="card-header bg-danger-subtle text-danger-emphasis">
+                <i class="bi bi-trash me-1"></i>Bu işlem geri alınamaz
+            </div>
+            <div class="card-body p-4">
+                <p class="mb-3">Aşağıdaki randevuyu kalıcı olarak silmek üzeresiniz:</p>
+
+                <dl class="row mb-3">
+                    <dt class="col-sm-3 text-muted fw-normal">Tarih</dt>
+                    <dd class="col-sm-9 fw-semibold">@Model.AppointmentDate.ToString("dd.MM.yyyy HH:mm")</dd>
+
+                    <dt class="col-sm-3 text-muted fw-normal">Hayvan</dt>
+                    <dd class="col-sm-9">@Model.PetName (@Model.OwnerName)</dd>
+
+                    <dt class="col-sm-3 text-muted fw-normal">Hizmet</dt>
+                    <dd class="col-sm-9">@Model.ServiceName</dd>
+
+                    <dt class="col-sm-3 text-muted fw-normal">Durum</dt>
+                    <dd class="col-sm-9"><span class="badge @Model.StatusValue.BadgeClass()">@Model.Status</span></dd>
+                </dl>
+
+                <div class="alert alert-secondary small mb-0">
+                    Kaydı tamamen silmek yerine, raporlamada iz kalması için
+                    <em>İptal Et</em> seçeneğini de kullanabilirsiniz.
+                </div>
+
+                <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="d-flex justify-content-end gap-2 mt-4">
+                    @Html.AntiForgeryToken()
+                    <a class="btn btn-light border" asp-action="Details" asp-route-id="@Model.Id">Vazgeç</a>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash me-1"></i>Evet, Sil
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

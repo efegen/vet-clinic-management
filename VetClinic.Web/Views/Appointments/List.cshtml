@@ -1,0 +1,160 @@
+@model ListViewModel<AppointmentListViewModel>
+@{
+    ViewData["Title"] = "Randevular — Liste";
+    var r = Model.Result;
+    string? F(string key) => Model.Filters.TryGetValue(key, out var v) ? v : null;
+    var fromVal = F("from");
+    var toVal = F("to");
+    var statusVal = F("status");
+    var hasFilter = !string.IsNullOrWhiteSpace(Model.Q) || !string.IsNullOrWhiteSpace(fromVal)
+                    || !string.IsNullOrWhiteSpace(toVal) || !string.IsNullOrWhiteSpace(statusVal);
+
+    string SortIcon(string col) => Model.IsActiveSort(col)
+        ? (Model.IsDescending ? "bi-sort-down" : "bi-sort-up")
+        : "bi-arrow-down-up text-muted opacity-50";
+}
+
+<div class="page-header">
+    <div>
+        <h1><i class="bi bi-calendar2-week text-primary"></i> Randevular</h1>
+        <span class="text-muted">Toplam @r.TotalCount kayıt@(hasFilter ? " · filtrelendi" : "")</span>
+    </div>
+    <div class="d-flex gap-2">
+        <partial name="_ViewToggle" />
+        <a class="btn btn-primary" asp-action="Create"><i class="bi bi-plus-lg me-1"></i>Yeni Randevu</a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <form method="get" asp-action="List" class="row g-2 align-items-end">
+            <div class="col-12 col-lg">
+                <label class="form-label small mb-1">Ara</label>
+                <div class="search-group">
+                    <span class="search-icon"><i class="bi bi-search"></i></span>
+                    <input type="search" name="q" value="@Model.Q" class="form-control" placeholder="Hayvan, sahip veya hizmet…" autocomplete="off" />
+                </div>
+            </div>
+            <div class="col-6 col-md-3 col-lg-2">
+                <label class="form-label small mb-1">Başlangıç</label>
+                <input type="date" name="from" value="@fromVal" class="form-control" />
+            </div>
+            <div class="col-6 col-md-3 col-lg-2">
+                <label class="form-label small mb-1">Bitiş</label>
+                <input type="date" name="to" value="@toVal" class="form-control" />
+            </div>
+            <div class="col-8 col-md-4 col-lg-2">
+                <label class="form-label small mb-1">Durum</label>
+                <select name="status" class="form-select">
+                    <option value="">Tüm durumlar</option>
+                    @foreach (var st in Enum.GetValues<AppointmentStatus>())
+                    {
+                        <option value="@st" selected="@(statusVal == st.ToString())">@st.ToText()</option>
+                    }
+                </select>
+            </div>
+            <div class="col-4 col-md-2 col-lg-auto">
+                <button class="btn btn-outline-primary w-100" type="submit"><i class="bi bi-funnel me-1"></i>Filtrele</button>
+            </div>
+            @if (hasFilter)
+            {
+                <div class="col-12 col-lg-auto">
+                    <a class="btn btn-link text-muted text-decoration-none px-1" asp-action="List"><i class="bi bi-x-lg me-1"></i>Temizle</a>
+                </div>
+            }
+            <input type="hidden" name="sort" value="@Model.Sort" />
+            <input type="hidden" name="dir" value="@Model.Dir" />
+        </form>
+    </div>
+
+    @if (r.Items.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th><a class="th-sort" asp-action="List" asp-all-route-data="@Model.SortRoute("date")">Tarih / Saat <i class="bi @SortIcon("date") small"></i></a></th>
+                        <th><a class="th-sort" asp-action="List" asp-all-route-data="@Model.SortRoute("pet")">Hayvan <i class="bi @SortIcon("pet") small"></i></a></th>
+                        <th><a class="th-sort" asp-action="List" asp-all-route-data="@Model.SortRoute("owner")">Sahibi <i class="bi @SortIcon("owner") small"></i></a></th>
+                        <th><a class="th-sort" asp-action="List" asp-all-route-data="@Model.SortRoute("service")">Hizmet <i class="bi @SortIcon("service") small"></i></a></th>
+                        <th class="text-center">Süre</th>
+                        <th><a class="th-sort" asp-action="List" asp-all-route-data="@Model.SortRoute("status")">Durum <i class="bi @SortIcon("status") small"></i></a></th>
+                        <th class="text-end">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var a in r.Items)
+                    {
+                        <tr>
+                            <td class="text-nowrap fw-semibold">@a.AppointmentDate.ToString("dd.MM.yyyy")<span class="text-muted fw-normal ms-1">@a.AppointmentDate.ToString("HH:mm")</span></td>
+                            <td><a class="text-decoration-none" asp-controller="Pets" asp-action="Details" asp-route-id="@a.PetId">@a.PetName</a></td>
+                            <td><a class="text-decoration-none text-muted" asp-controller="Owners" asp-action="Details" asp-route-id="@a.OwnerId">@a.OwnerName</a></td>
+                            <td>@a.ServiceName</td>
+                            <td class="text-center text-muted text-nowrap">@a.DurationMinutes dk</td>
+                            <td><span class="badge @a.StatusValue.BadgeClass()">@a.Status</span></td>
+                            <td class="text-end">
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        İşlem <i class="bi bi-chevron-down small"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item" asp-action="Details" asp-route-id="@a.Id"><i class="bi bi-eye me-2"></i>Detaylar</a></li>
+
+                                        @if (a.StatusValue == AppointmentStatus.Beklemede)
+                                        {
+                                            <li>
+                                                <form asp-action="Confirm" asp-route-id="@a.Id" method="post">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="dropdown-item text-info"><i class="bi bi-check-circle me-2"></i>Onayla</button>
+                                                </form>
+                                            </li>
+                                        }
+                                        @if (a.StatusValue == AppointmentStatus.Onaylandi)
+                                        {
+                                            <li>
+                                                <form asp-action="Complete" asp-route-id="@a.Id" method="post">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="dropdown-item text-success"><i class="bi bi-check2-all me-2"></i>Tamamla</button>
+                                                </form>
+                                            </li>
+                                        }
+
+                                        @if (a.StatusValue == AppointmentStatus.Beklemede || a.StatusValue == AppointmentStatus.Onaylandi)
+                                        {
+                                            <li><a class="dropdown-item" asp-action="Edit" asp-route-id="@a.Id"><i class="bi bi-pencil me-2"></i>Düzenle</a></li>
+                                            <li><a class="dropdown-item text-warning" asp-action="Cancel" asp-route-id="@a.Id"><i class="bi bi-x-circle me-2"></i>İptal Et</a></li>
+                                        }
+
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item text-danger" asp-action="Delete" asp-route-id="@a.Id"><i class="bi bi-trash me-2"></i>Sil</a></li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card-footer bg-white d-flex flex-wrap justify-content-between align-items-center gap-2 small text-muted">
+            <span>@r.FirstItemIndex–@r.LastItemIndex / @r.TotalCount kayıt</span>
+            <partial name="_Pager" model="@PagerModel.From(r, Model.Q, Model.Sort, Model.Dir, Model.Filters, action: "List")" />
+        </div>
+    }
+    else if (hasFilter)
+    {
+        <div class="empty-state">
+            <i class="bi bi-calendar2-x"></i>
+            <p class="mb-3">Filtreyle eşleşen randevu bulunamadı.</p>
+            <a class="btn btn-outline-secondary" asp-action="List"><i class="bi bi-arrow-counterclockwise me-1"></i>Filtreyi Temizle</a>
+        </div>
+    }
+    else
+    {
+        <div class="empty-state">
+            <i class="bi bi-calendar2-x"></i>
+            <p class="mb-3">Henüz randevu kaydı yok.</p>
+            <a class="btn btn-primary" asp-action="Create"><i class="bi bi-plus-lg me-1"></i>İlk Randevuyu Oluştur</a>
+        </div>
+    }
+</div>
