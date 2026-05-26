@@ -75,7 +75,7 @@
                         <tr>
                             <td class="text-muted">@i</td>
                             <td class="fw-semibold">@owner.FullName</td>
-                            <td class="text-nowrap"><i class="bi bi-telephone text-muted me-1"></i>@owner.Phone</td>
+                            <td class="text-nowrap"><i class="bi bi-telephone text-muted me-1"></i>@owner.Phone.ToPhoneDisplay()</td>
                             <td>
                                 @if (string.IsNullOrWhiteSpace(owner.Email))
                                 {

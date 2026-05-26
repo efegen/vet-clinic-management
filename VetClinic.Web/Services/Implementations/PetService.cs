@@ -106,7 +106,7 @@ public class PetService : IPetService
             .Select(o => new SelectListItem
             {
                 Value = o.Id.ToString(),
-                Text = $"{o.FullName} ({o.Phone})",
+                Text = $"{o.FullName} ({o.Phone.ToPhoneDisplay()})",
                 Selected = o.Id == vm.OwnerId
             })
             .ToList();
