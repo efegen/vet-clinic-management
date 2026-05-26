@@ -1,8 +1,31 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+@{
+    ViewData["Title"] = "Anasayfa";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="page-header">
+    <h1><i class="bi bi-speedometer2 text-primary"></i> Anasayfa</h1>
+</div>
+
+<div class="card">
+    <div class="card-body p-4">
+        <h2 class="h5 mb-2">Vet Klinik Randevu Yönetim Sistemi</h2>
+        <p class="text-muted mb-3">
+            Dashboard burada görüntülenecek (günlük/haftalık özet, bugünün randevuları,
+            en çok talep edilen hizmetler). Şimdilik üst menüden modüllere ulaşabilirsiniz.
+        </p>
+        <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-outline-primary" asp-controller="Owners" asp-action="Index">
+                <i class="bi bi-person-lines-fill me-1"></i>Sahipler
+            </a>
+            <a class="btn btn-outline-primary" asp-controller="Pets" asp-action="Index">
+                <i class="bi bi-heart-pulse me-1"></i>Hayvanlar
+            </a>
+            <a class="btn btn-outline-primary" asp-controller="Services" asp-action="Index">
+                <i class="bi bi-clipboard2-check me-1"></i>Hizmetler
+            </a>
+            <a class="btn btn-outline-primary" asp-controller="Appointments" asp-action="Index">
+                <i class="bi bi-calendar2-week me-1"></i>Randevular
+            </a>
+        </div>
+    </div>
 </div>

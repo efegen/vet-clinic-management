@@ -1,22 +1,157 @@
+:root {
+    /* Teal medikal tema — Bootstrap primary'yi de buna çekiyoruz */
+    --app-primary: #0d9488;
+    --app-primary-dark: #0a7269;
+    --app-primary-darker: #134e4a;
+    --app-bg: #f4f6f8;
+
+    --bs-primary: #0d9488;
+    --bs-primary-rgb: 13, 148, 136;
+    --bs-link-color: #0a7269;
+    --bs-link-color-rgb: 10, 114, 105;
+    --bs-link-hover-color: #134e4a;
+}
+
 html {
-  font-size: 14px;
+    font-size: 15px;
+    position: relative;
+    min-height: 100%;
 }
 
 @media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
+    html {
+        font-size: 16px;
+    }
 }
 
 body {
-  margin-bottom: 60px;
+    background-color: var(--app-bg);
+    color: #1f2937;
 }
+
+/* --- Primary butonları temaya hizala (Bootstrap 5.3 değişkenleri) --- */
+.btn-primary {
+    --bs-btn-bg: var(--app-primary);
+    --bs-btn-border-color: var(--app-primary);
+    --bs-btn-hover-bg: var(--app-primary-dark);
+    --bs-btn-hover-border-color: var(--app-primary-dark);
+    --bs-btn-active-bg: var(--app-primary-darker);
+    --bs-btn-active-border-color: var(--app-primary-darker);
+    --bs-btn-disabled-bg: var(--app-primary);
+    --bs-btn-disabled-border-color: var(--app-primary);
+}
+
+.btn-outline-primary {
+    --bs-btn-color: var(--app-primary);
+    --bs-btn-border-color: var(--app-primary);
+    --bs-btn-hover-bg: var(--app-primary);
+    --bs-btn-hover-border-color: var(--app-primary);
+    --bs-btn-active-bg: var(--app-primary-dark);
+    --bs-btn-active-border-color: var(--app-primary-dark);
+}
+
+.btn:focus, .btn:active:focus, .form-control:focus, .form-select:focus, .form-check-input:focus {
+    box-shadow: 0 0 0 0.2rem rgba(13, 148, 136, 0.25);
+    border-color: var(--app-primary);
+}
+
+/* --- Navbar --- */
+.app-navbar {
+    background: linear-gradient(90deg, var(--app-primary-darker), var(--app-primary));
+}
+
+.app-navbar .navbar-brand { letter-spacing: .2px; }
+
+.app-navbar .nav-link {
+    color: rgba(255, 255, 255, .82);
+    border-radius: .5rem;
+    padding-inline: .85rem;
+    transition: background-color .15s ease, color .15s ease;
+}
+
+.app-navbar .nav-link:hover { color: #fff; background-color: rgba(255, 255, 255, .12); }
+.app-navbar .nav-link.active { color: #fff; background-color: rgba(255, 255, 255, .2); font-weight: 600; }
+
+/* --- Kartlar --- */
+.card {
+    border: 1px solid rgba(15, 23, 42, .06);
+    border-radius: .9rem;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, .04), 0 6px 18px rgba(15, 23, 42, .04);
+}
+
+.card-header {
+    background-color: #fff;
+    border-bottom: 1px solid rgba(15, 23, 42, .06);
+    font-weight: 600;
+    border-top-left-radius: .9rem !important;
+    border-top-right-radius: .9rem !important;
+}
+
+/* --- Sayfa başlığı --- */
+.page-header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .75rem;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+}
+
+.page-header h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+
+.page-header .text-muted { font-size: .9rem; }
+
+/* --- Tablolar --- */
+.table {
+    --bs-table-hover-bg: rgba(13, 148, 136, .06);
+    margin-bottom: 0;
+}
+
+.table > thead {
+    background-color: #f8fafc;
+    text-transform: uppercase;
+    font-size: .76rem;
+    letter-spacing: .04em;
+    color: #64748b;
+}
+
+.table > thead th { border-bottom: 1px solid rgba(15, 23, 42, .08); font-weight: 600; }
+.table > :not(caption) > * > * { padding: .7rem .75rem; vertical-align: middle; }
+
+/* --- Rozetler / durum --- */
+.badge { font-weight: 600; letter-spacing: .01em; }
+
+/* --- Boş durum --- */
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #94a3b8;
+}
+
+.empty-state i { font-size: 2.5rem; display: block; margin-bottom: .5rem; opacity: .6; }
+
+/* --- İstatistik kartı (dashboard) --- */
+.stat-card .stat-value { font-size: 1.9rem; font-weight: 700; line-height: 1; }
+.stat-card .stat-label { color: #64748b; font-size: .85rem; }
+.stat-card .stat-icon {
+    width: 3rem; height: 3rem;
+    display: grid; place-items: center;
+    border-radius: .75rem; font-size: 1.4rem;
+}
+
+/* --- Footer --- */
+.app-footer {
+    background-color: #fff;
+    border-top: 1px solid rgba(15, 23, 42, .06);
+}
+
+/* --- Form etiketleri --- */
+.form-label { font-weight: 600; font-size: .9rem; color: #334155; }
+.required-mark { color: #dc3545; }
