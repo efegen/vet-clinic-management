@@ -1,0 +1,92 @@
+@model ServiceTableModel
+
+@if (!Model.Items.Any())
+{
+    <div class="empty-state py-4">
+        <i class="bi bi-clipboard-x"></i>
+        <p class="mb-0">@(Model.IsActiveTab ? "Aktif hizmet yok." : "Pasif hizmet yok.")</p>
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Hizmet</th>
+                    <th>Uygulanan Türler</th>
+                    <th class="text-center">Süre</th>
+                    <th class="text-end">Ücret</th>
+                    <th class="text-center">Randevu</th>
+                    <th class="text-end">İşlemler</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var s in Model.Items)
+                {
+                    <tr>
+                        <td class="fw-semibold">@s.Name</td>
+                        <td>
+                            @if (s.ApplicableSpecies.Count == Enum.GetValues<PetSpecies>().Length)
+                            {
+                                <span class="badge text-bg-light border">Tüm türler</span>
+                            }
+                            else
+                            {
+                                <span class="d-inline-flex flex-wrap gap-1">
+                                    @foreach (var sp in s.ApplicableSpecies)
+                                    {
+                                        <span class="badge @sp.BadgeClass()">@sp.ToText()</span>
+                                    }
+                                </span>
+                            }
+                        </td>
+                        <td class="text-center text-nowrap">@s.DurationMinutes dk</td>
+                        <td class="text-end text-nowrap">@s.Price.ToPriceDisplay()</td>
+                        <td class="text-center"><span class="badge text-bg-light border">@s.AppointmentCount</span></td>
+                        <td>
+                            <div class="d-flex gap-1 justify-content-end">
+                                <a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@s.Id" title="Düzenle">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+
+                                @if (Model.IsActiveTab)
+                                {
+                                    <form asp-action="Deactivate" asp-route-id="@s.Id" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-outline-warning" title="Pasifleştir">
+                                            <i class="bi bi-pause-circle"></i>
+                                        </button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <form asp-action="Activate" asp-route-id="@s.Id" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-outline-success" title="Aktifleştir">
+                                            <i class="bi bi-play-circle"></i>
+                                        </button>
+                                    </form>
+                                }
+
+                                @if (s.AppointmentCount == 0)
+                                {
+                                    <a class="btn btn-sm btn-outline-danger" asp-action="Delete" asp-route-id="@s.Id" title="Sil">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                }
+                                else
+                                {
+                                    <button type="button" class="btn btn-sm btn-outline-danger" disabled
+                                            title="Randevusu olduğu için silinemez — pasifleştirin">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

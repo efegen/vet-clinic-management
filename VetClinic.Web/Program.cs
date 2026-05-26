@@ -48,6 +48,16 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+// Sayı/tarih ayrıştırmasını kültürden bağımsız (invariant) yap: HTML number/date input'ları
+// ondalığı nokta, tarihi ISO ile gönderir. Gösterimleri (para, telefon, tarih) elle Türkçe formatlıyoruz.
+var invariant = System.Globalization.CultureInfo.InvariantCulture;
+app.UseRequestLocalization(new Microsoft.AspNetCore.Builder.RequestLocalizationOptions
+{
+    DefaultRequestCulture = new Microsoft.AspNetCore.Localization.RequestCulture(invariant),
+    SupportedCultures = new[] { invariant },
+    SupportedUICultures = new[] { invariant }
+});
+
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 

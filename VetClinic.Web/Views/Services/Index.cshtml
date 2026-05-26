@@ -1,0 +1,55 @@
+@model ServiceIndexViewModel
+@{
+    ViewData["Title"] = "Hizmetler";
+    var hasSearch = !string.IsNullOrWhiteSpace(Model.Q);
+}
+
+<div class="page-header">
+    <div>
+        <h1><i class="bi bi-clipboard2-check text-primary"></i> Hizmetler</h1>
+        <span class="text-muted">@Model.Active.Count aktif · @Model.Passive.Count pasif</span>
+    </div>
+    <a class="btn btn-primary" asp-action="Create">
+        <i class="bi bi-plus-lg me-1"></i>Yeni Hizmet
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <form method="get" asp-action="Index" class="search-group">
+            <span class="search-icon"><i class="bi bi-search"></i></span>
+            <input type="search" name="q" value="@Model.Q" class="form-control"
+                   placeholder="Hizmet adı ara…" autocomplete="off" aria-label="Ara" />
+            @if (hasSearch)
+            {
+                <a class="search-clear" asp-action="Index" title="Aramayı temizle"><i class="bi bi-x-lg"></i></a>
+            }
+        </form>
+    </div>
+
+    <div class="card-body pb-0 pt-3">
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-active" type="button" role="tab">
+                    <i class="bi bi-check-circle me-1"></i>Aktif
+                    <span class="badge text-bg-success ms-1">@Model.Active.Count</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-passive" type="button" role="tab">
+                    <i class="bi bi-pause-circle me-1"></i>Pasif
+                    <span class="badge text-bg-secondary ms-1">@Model.Passive.Count</span>
+                </button>
+            </li>
+        </ul>
+    </div>
+
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="tab-active" role="tabpanel">
+            <partial name="_ServiceTable" model="new ServiceTableModel { Items = Model.Active, IsActiveTab = true }" />
+        </div>
+        <div class="tab-pane fade" id="tab-passive" role="tabpanel">
+            <partial name="_ServiceTable" model="new ServiceTableModel { Items = Model.Passive, IsActiveTab = false }" />
+        </div>
+    </div>
+</div>

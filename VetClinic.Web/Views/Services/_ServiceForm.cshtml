@@ -1,0 +1,63 @@
+@model ServiceCreateEditViewModel
+
+<input type="hidden" asp-for="Id" />
+
+<div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+<div class="row g-3">
+    <div class="col-12">
+        <label asp-for="Name" class="form-label">Hizmet Adı <span class="required-mark">*</span></label>
+        <input asp-for="Name" class="form-control" placeholder="Örn. Genel Muayene" autocomplete="off" />
+        <span asp-validation-for="Name" class="text-danger small"></span>
+    </div>
+
+    <div class="col-12">
+        <label asp-for="Description" class="form-label">Açıklama</label>
+        <textarea asp-for="Description" class="form-control" rows="3" placeholder="Hizmet detayı (opsiyonel)"></textarea>
+        <span asp-validation-for="Description" class="text-danger small"></span>
+    </div>
+
+    <div class="col-md-6">
+        <label asp-for="DurationMinutes" class="form-label">Süre (dakika) <span class="required-mark">*</span></label>
+        <div class="input-group">
+            <span class="input-group-text bg-white text-muted"><i class="bi bi-clock"></i></span>
+            <input asp-for="DurationMinutes" type="number" min="15" max="240" step="5" class="form-control" placeholder="30" />
+            <span class="input-group-text">dk</span>
+        </div>
+        <span asp-validation-for="DurationMinutes" class="text-danger small"></span>
+    </div>
+
+    <div class="col-md-6">
+        <label asp-for="Price" class="form-label">Ücret <span class="required-mark">*</span></label>
+        <div class="input-group">
+            <span class="input-group-text bg-white text-muted">₺</span>
+            <input asp-for="Price" type="number" min="0.01" step="0.01" class="form-control" placeholder="350.00" />
+        </div>
+        <span asp-validation-for="Price" class="text-danger small"></span>
+    </div>
+
+    <div class="col-12">
+        <label class="form-label d-block">Uygulanabilir Türler <span class="required-mark">*</span></label>
+        <div class="d-flex flex-wrap gap-3">
+            @foreach (var sp in Enum.GetValues<PetSpecies>())
+            {
+                var isChecked = Model.ApplicableSpecies.Contains(sp);
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="ApplicableSpecies" value="@sp"
+                           id="sp-@sp" checked="@isChecked" />
+                    <label class="form-check-label" for="sp-@sp">
+                        <span class="badge @sp.BadgeClass()">@sp.ToText()</span>
+                    </label>
+                </div>
+            }
+        </div>
+        <span asp-validation-for="ApplicableSpecies" class="text-danger small"></span>
+    </div>
+
+    <div class="col-12">
+        <div class="form-check form-switch">
+            <input asp-for="IsActive" class="form-check-input" role="switch" />
+            <label asp-for="IsActive" class="form-check-label">Aktif (yeni randevu oluştururken seçilebilir)</label>
+        </div>
+    </div>
+</div>

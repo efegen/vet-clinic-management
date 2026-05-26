@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using VetClinic.Web.Models.Enums;
 
 namespace VetClinic.Web.ViewModels.Services;
 
@@ -24,4 +25,7 @@ public class ServiceCreateEditViewModel
 
     [Display(Name = "Aktif mi?")]
     public bool IsActive { get; set; } = true;
+
+    [Display(Name = "Uygulanabilir Türler")]
+    public List<PetSpecies> ApplicableSpecies { get; set; } = new();
 }

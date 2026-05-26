@@ -1,3 +1,5 @@
+using VetClinic.Web.Models.Enums;
+
 namespace VetClinic.Web.ViewModels.Services;
 
 public class ServiceListViewModel
@@ -8,4 +10,5 @@ public class ServiceListViewModel
     public decimal Price { get; set; }
     public bool IsActive { get; set; }
     public int AppointmentCount { get; set; }
+    public List<PetSpecies> ApplicableSpecies { get; set; } = new();
 }

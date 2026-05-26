@@ -4,7 +4,7 @@ namespace VetClinic.Web.Services.Interfaces;
 
 public interface IServiceCatalogService
 {
-    Task<IEnumerable<ServiceListViewModel>> GetAllAsync();
+    Task<IEnumerable<ServiceListViewModel>> GetAllAsync(string? q = null);
     Task<ServiceCreateEditViewModel?> GetForEditAsync(int id);
     Task<Result> CreateAsync(ServiceCreateEditViewModel vm);
     Task<Result> UpdateAsync(ServiceCreateEditViewModel vm);

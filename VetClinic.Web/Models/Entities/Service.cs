@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using VetClinic.Web.Models.Enums;
 
 namespace VetClinic.Web.Models.Entities;
 
@@ -23,6 +24,10 @@ public class Service
 
     // Pasifleştirilen hizmet yeni randevu listesinde gözükmez (soft delete).
     public bool IsActive { get; set; } = true;
+
+    // Bu hizmetin uygulanabileceği hayvan türleri. EF Core 8 primitive collection olarak
+    // tek kolonda (JSON) saklanır — ayrı tabloya gerek yok.
+    public List<PetSpecies> ApplicableSpecies { get; set; } = new();
 
     // Navigation
     public ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();

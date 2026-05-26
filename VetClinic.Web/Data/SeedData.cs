@@ -24,14 +24,15 @@ public static class SeedData
         db.SaveChanges();
 
         // --- Services (6) ---
+        var allSpecies = new List<PetSpecies> { PetSpecies.Kopek, PetSpecies.Kedi, PetSpecies.Kus, PetSpecies.Tavsan, PetSpecies.Diger };
         var services = new List<Service>
         {
-            new() { Name = "Genel Muayene",                 DurationMinutes = 30, Price = 350m,  IsActive = true },
-            new() { Name = "Aşı (Tek Doz)",                 DurationMinutes = 20, Price = 250m,  IsActive = true },
-            new() { Name = "Kısırlaştırma — Kedi (Dişi)",   DurationMinutes = 90, Price = 4500m, IsActive = true },
-            new() { Name = "Kısırlaştırma — Köpek (Erkek)", DurationMinutes = 60, Price = 3500m, IsActive = true },
-            new() { Name = "Diş Temizliği",                 DurationMinutes = 60, Price = 1800m, IsActive = true },
-            new() { Name = "Tırnak Kesimi",                 DurationMinutes = 15, Price = 150m,  IsActive = true },
+            new() { Name = "Genel Muayene",                 DurationMinutes = 30, Price = 350m,  IsActive = true, ApplicableSpecies = new(allSpecies) },
+            new() { Name = "Aşı (Tek Doz)",                 DurationMinutes = 20, Price = 250m,  IsActive = true, ApplicableSpecies = new(allSpecies) },
+            new() { Name = "Kısırlaştırma — Kedi (Dişi)",   DurationMinutes = 90, Price = 4500m, IsActive = true, ApplicableSpecies = new() { PetSpecies.Kedi } },
+            new() { Name = "Kısırlaştırma — Köpek (Erkek)", DurationMinutes = 60, Price = 3500m, IsActive = true, ApplicableSpecies = new() { PetSpecies.Kopek } },
+            new() { Name = "Diş Temizliği",                 DurationMinutes = 60, Price = 1800m, IsActive = true, ApplicableSpecies = new() { PetSpecies.Kopek, PetSpecies.Kedi } },
+            new() { Name = "Tırnak Kesimi",                 DurationMinutes = 15, Price = 150m,  IsActive = true, ApplicableSpecies = new() { PetSpecies.Kopek, PetSpecies.Kedi, PetSpecies.Kus, PetSpecies.Tavsan } },
         };
         db.Services.AddRange(services);
         db.SaveChanges();
