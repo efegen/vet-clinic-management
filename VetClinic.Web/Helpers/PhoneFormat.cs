@@ -26,6 +26,6 @@ public static class PhoneFormat
         if (digits.Length != 10 || digits[0] != '5')
             return phone; // beklenmeyen format — dokunma
 
-        return $"0 ({digits[..3]}) {digits[3..6]} {digits[6..8]} {digits[8..10]}";
+        return $"0 ({digits[..3]}) {digits[3..6]} {digits[6..10]}";
     }
 }

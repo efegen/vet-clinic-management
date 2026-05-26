@@ -1,0 +1,42 @@
+@model OwnerCreateEditViewModel
+
+<input type="hidden" asp-for="Id" />
+
+<div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+<div class="row g-3">
+    <div class="col-md-6">
+        <label asp-for="FullName" class="form-label">Ad Soyad <span class="required-mark">*</span></label>
+        <div class="input-group">
+            <span class="input-group-text bg-white text-muted"><i class="bi bi-person"></i></span>
+            <input asp-for="FullName" class="form-control" placeholder="Örn. Ayşe Yılmaz" autocomplete="off" />
+        </div>
+        <span asp-validation-for="FullName" class="text-danger small"></span>
+    </div>
+
+    <div class="col-md-6">
+        <label asp-for="Phone" class="form-label">Telefon <span class="required-mark">*</span></label>
+        <div class="input-group phone-field">
+            <span class="input-group-text bg-white text-muted"><i class="bi bi-telephone"></i></span>
+            <input type="tel" class="form-control" inputmode="tel"
+                   placeholder="0 (5__) ___ ____" autocomplete="tel" data-phone-display />
+            <input type="hidden" asp-for="Phone" data-phone-value />
+        </div>
+        <span asp-validation-for="Phone" class="text-danger small"></span>
+    </div>
+
+    <div class="col-md-6">
+        <label asp-for="Email" class="form-label">E-posta</label>
+        <div class="input-group">
+            <span class="input-group-text bg-white text-muted"><i class="bi bi-envelope"></i></span>
+            <input asp-for="Email" class="form-control" placeholder="ornek@eposta.com" autocomplete="off" />
+        </div>
+        <span asp-validation-for="Email" class="text-danger small"></span>
+    </div>
+
+    <div class="col-12">
+        <label asp-for="Address" class="form-label">Adres</label>
+        <textarea asp-for="Address" class="form-control" rows="3" placeholder="İl / ilçe / açık adres"></textarea>
+        <span asp-validation-for="Address" class="text-danger small"></span>
+    </div>
+</div>

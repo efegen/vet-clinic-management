@@ -156,6 +156,9 @@ body {
 .form-label { font-weight: 600; font-size: .9rem; color: #334155; }
 .required-mark { color: #dc3545; }
 
+/* Hatasızken validation summary kutusunu gizle */
+.validation-summary-valid { display: none; }
+
 /* --- Gömülü arama kutusu --- */
 .search-group {
     position: relative;
