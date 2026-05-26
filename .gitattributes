@@ -1,0 +1,18 @@
+# Normalize line endings: store as LF in repo, check out native on each platform.
+* text=auto
+
+# Explicitly treat these as text (CRLF on Windows checkout).
+*.cs text
+*.csproj text
+*.sln text
+*.cshtml text
+*.json text
+*.md text
+*.css text
+*.js text
+
+# Binary assets — never normalize.
+*.png binary
+*.jpg binary
+*.ico binary
+*.db binary
