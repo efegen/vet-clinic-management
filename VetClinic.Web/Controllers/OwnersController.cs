@@ -28,4 +28,13 @@ public class OwnersController : Controller
             Dir = query.Dir
         });
     }
+
+    // GET /Owners/Details/{id}
+    public async Task<IActionResult> Details(int id)
+    {
+        var owner = await _ownerService.GetDetailsAsync(id);
+        if (owner is null) return NotFound();
+
+        return View(owner);
+    }
 }

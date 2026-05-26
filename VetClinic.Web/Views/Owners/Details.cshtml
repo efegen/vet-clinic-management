@@ -1,0 +1,112 @@
+@model OwnerDetailsViewModel
+@{
+    ViewData["Title"] = Model.FullName;
+}
+
+<div class="page-header">
+    <div>
+        <a class="text-decoration-none text-muted small" asp-action="Index">
+            <i class="bi bi-arrow-left me-1"></i>Sahipler
+        </a>
+        <h1 class="mt-1"><i class="bi bi-person-circle text-primary"></i> @Model.FullName</h1>
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-primary" asp-action="Edit" asp-route-id="@Model.Id">
+            <i class="bi bi-pencil me-1"></i>Düzenle
+        </a>
+        <a class="btn btn-outline-danger" asp-action="Delete" asp-route-id="@Model.Id">
+            <i class="bi bi-trash me-1"></i>Sil
+        </a>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header"><i class="bi bi-person-vcard me-1 text-primary"></i>İletişim Bilgileri</div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex align-items-center gap-2">
+                    <i class="bi bi-telephone text-muted"></i>
+                    <span>@Model.Phone.ToPhoneDisplay()</span>
+                </li>
+                <li class="list-group-item d-flex align-items-center gap-2">
+                    <i class="bi bi-envelope text-muted"></i>
+                    @if (string.IsNullOrWhiteSpace(Model.Email))
+                    {
+                        <span class="text-muted">E-posta yok</span>
+                    }
+                    else
+                    {
+                        <a href="mailto:@Model.Email" class="text-decoration-none">@Model.Email</a>
+                    }
+                </li>
+                <li class="list-group-item d-flex align-items-start gap-2">
+                    <i class="bi bi-geo-alt text-muted mt-1"></i>
+                    @if (string.IsNullOrWhiteSpace(Model.Address))
+                    {
+                        <span class="text-muted">Adres yok</span>
+                    }
+                    else
+                    {
+                        <span>@Model.Address</span>
+                    }
+                </li>
+                <li class="list-group-item d-flex align-items-center gap-2 text-muted small">
+                    <i class="bi bi-calendar-plus"></i>
+                    <span>Kayıt: @Model.CreatedAt.ToString("dd.MM.yyyy HH:mm")</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <span><i class="bi bi-heart-pulse me-1 text-primary"></i>Hayvanları <span class="badge text-bg-light border ms-1">@Model.Pets.Count</span></span>
+                <a class="btn btn-sm btn-primary" asp-controller="Pets" asp-action="Create" asp-route-ownerId="@Model.Id">
+                    <i class="bi bi-plus-lg me-1"></i>Yeni Hayvan
+                </a>
+            </div>
+            @if (Model.Pets.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Ad</th>
+                                <th>Tür</th>
+                                <th>Yaş</th>
+                                <th class="text-end">İşlem</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var pet in Model.Pets)
+                            {
+                                <tr>
+                                    <td class="fw-semibold">@pet.Name</td>
+                                    <td>@pet.Species</td>
+                                    <td class="text-muted">@pet.AgeText</td>
+                                    <td class="text-end">
+                                        <a class="btn btn-sm btn-outline-secondary" asp-controller="Pets" asp-action="Details" asp-route-id="@pet.Id" title="Detaylar">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="empty-state py-4">
+                    <i class="bi bi-clipboard-x"></i>
+                    <p class="mb-3">Bu sahibe ait hayvan kaydı yok.</p>
+                    <a class="btn btn-sm btn-primary" asp-controller="Pets" asp-action="Create" asp-route-ownerId="@Model.Id">
+                        <i class="bi bi-plus-lg me-1"></i>İlk Hayvanı Ekle
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
