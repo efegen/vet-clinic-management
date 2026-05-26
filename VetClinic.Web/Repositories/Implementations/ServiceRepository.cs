@@ -13,6 +13,13 @@ public class ServiceRepository : Repository<Service>, IServiceRepository
     {
     }
 
+    // Liste görünümü randevu sayısına ihtiyaç duyduğu için Appointments include edilir.
+    public override async Task<IEnumerable<Service>> GetAllAsync()
+        => await _context.Services
+            .Include(s => s.Appointments)
+            .OrderBy(s => s.Name)
+            .ToListAsync();
+
     public async Task<IEnumerable<Service>> GetActiveAsync()
         => await _context.Services
             .Where(s => s.IsActive)
