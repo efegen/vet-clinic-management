@@ -1,0 +1,36 @@
+@model PetCreateEditViewModel
+@{
+    ViewData["Title"] = "Hayvan Düzenle";
+}
+
+<div class="page-header">
+    <div>
+        <a class="text-decoration-none text-muted small" asp-action="Details" asp-route-id="@Model.Id">
+            <i class="bi bi-arrow-left me-1"></i>@Model.Name
+        </a>
+        <h1 class="mt-1"><i class="bi bi-pencil-square text-primary"></i> Hayvan Düzenle</h1>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-9 col-xl-8">
+        <div class="card">
+            <div class="card-body p-4">
+                <form asp-action="Edit" method="post">
+                    <partial name="_PetForm" model="Model" />
+
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <a class="btn btn-light border" asp-action="Details" asp-route-id="@Model.Id">İptal</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg me-1"></i>Güncelle
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

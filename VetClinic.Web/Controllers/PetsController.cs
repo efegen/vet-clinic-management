@@ -39,4 +39,82 @@ public class PetsController : Controller
 
         return View(pet);
     }
+
+    // GET /Pets/Create?ownerId=
+    public async Task<IActionResult> Create(int? ownerId)
+    {
+        var vm = await _petService.BuildEmptyCreateAsync(ownerId);
+        return View(vm);
+    }
+
+    // POST /Pets/Create
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> Create(PetCreateEditViewModel vm)
+    {
+        if (!ModelState.IsValid)
+        {
+            await _petService.PopulateOwnerOptionsAsync(vm);
+            return View(vm);
+        }
+
+        var result = await _petService.CreateAsync(vm);
+        if (!result.Succeeded)
+        {
+            ModelState.AddModelError("", result.Message);
+            await _petService.PopulateOwnerOptionsAsync(vm);
+            return View(vm);
+        }
+
+        TempData["Success"] = result.Message;
+        return RedirectToAction(nameof(Index));
+    }
+
+    // GET /Pets/Edit/{id}
+    public async Task<IActionResult> Edit(int id)
+    {
+        var vm = await _petService.GetForEditAsync(id);
+        if (vm is null) return NotFound();
+
+        return View(vm);
+    }
+
+    // POST /Pets/Edit/{id}
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> Edit(PetCreateEditViewModel vm)
+    {
+        if (!ModelState.IsValid)
+        {
+            await _petService.PopulateOwnerOptionsAsync(vm);
+            return View(vm);
+        }
+
+        var result = await _petService.UpdateAsync(vm);
+        if (!result.Succeeded)
+        {
+            ModelState.AddModelError("", result.Message);
+            await _petService.PopulateOwnerOptionsAsync(vm);
+            return View(vm);
+        }
+
+        TempData["Success"] = result.Message;
+        return RedirectToAction(nameof(Index));
+    }
+
+    // GET /Pets/Delete/{id} — onay sayfası
+    public async Task<IActionResult> Delete(int id)
+    {
+        var pet = await _petService.GetDetailsAsync(id);
+        if (pet is null) return NotFound();
+
+        return View(pet);
+    }
+
+    // POST /Pets/Delete/{id}
+    [HttpPost, ActionName("Delete"), ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteConfirmed(int id)
+    {
+        var result = await _petService.DeleteAsync(id);
+        TempData[result.Succeeded ? "Success" : "Error"] = result.Message;
+        return RedirectToAction(nameof(Index));
+    }
 }
