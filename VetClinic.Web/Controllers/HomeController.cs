@@ -1,26 +1,25 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using VetClinic.Web.Models;
+using VetClinic.Web.Services.Interfaces;
 
 namespace VetClinic.Web.Controllers;
 
 public class HomeController : Controller
 {
+    private readonly IDashboardService _dashboardService;
     private readonly ILogger<HomeController> _logger;
 
-    public HomeController(ILogger<HomeController> logger)
+    public HomeController(IDashboardService dashboardService, ILogger<HomeController> logger)
     {
+        _dashboardService = dashboardService;
         _logger = logger;
     }
 
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
-        return View();
-    }
-
-    public IActionResult Privacy()
-    {
-        return View();
+        var vm = await _dashboardService.BuildAsync();
+        return View(vm);
     }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

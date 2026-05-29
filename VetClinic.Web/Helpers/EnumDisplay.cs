@@ -43,6 +43,16 @@ public static class EnumDisplay
         _ => "text-bg-light"
     };
 
+    // Sadece tema "lezzeti" — modifier sınıf isimleri (.x-warning gibi) inşası için.
+    public static string BadgeFlavor(this AppointmentStatus status) => status switch
+    {
+        AppointmentStatus.Beklemede => "warning",
+        AppointmentStatus.Onaylandi => "info",
+        AppointmentStatus.Tamamlandi => "success",
+        AppointmentStatus.IptalEdildi => "secondary",
+        _ => "secondary"
+    };
+
     public static string ToText(this AppointmentStatus status) => status switch
     {
         AppointmentStatus.Beklemede => "Beklemede",
