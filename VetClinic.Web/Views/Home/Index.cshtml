@@ -3,283 +3,215 @@
 @{
     ViewData["Title"] = "Anasayfa";
 
-    var now = DateTime.Now;
-    var greet = now.Hour < 12 ? "İyi sabahlar" : now.Hour < 18 ? "İyi günler" : "İyi akşamlar";
     var tr = new CultureInfo("tr-TR");
     var inv = CultureInfo.InvariantCulture;
+    var now = DateTime.Now;
+    var today = now.Date;
 
-    // Mesai penceresi — "Şimdi" göstergesi için.
-    const int DayStartHour = 9;
-    const int DayEndHour = 19;
-    bool nowInWindow = now.Hour >= DayStartHour && now.Hour < DayEndHour;
+    // Bu haftanın aralığı (KPI alt metni).
+    int weekDiff = (7 + (today.DayOfWeek - DayOfWeek.Monday)) % 7;
+    var weekStart = today.AddDays(-weekDiff);
+    var weekEnd = weekStart.AddDays(6);
 
-    string Pct(double v) => Math.Clamp(v, 0, 100).ToString("0.##", inv);
+    // Bugün tamamlanan randevu sayısı (KPI + durum cümlesi için).
+    var doneToday = Model.TodayAppointments.Count(a => a.StatusValue == AppointmentStatus.Tamamlandi);
 
-    // Bağlamsal alt yazılar için.
+    // "Sıradaki" — şu andan sonraki ilk randevu.
     var nextToday = Model.TodayAppointments
         .Where(a => a.AppointmentDate >= now)
         .OrderBy(a => a.AppointmentDate)
         .FirstOrDefault();
+    var nextInMinutes = nextToday is null ? 0 : (int)Math.Round((nextToday.AppointmentDate - now).TotalMinutes);
 
-    var nextPending = Model.TodayAppointments
-        .Concat(Model.UpcomingAppointments)
-        .Where(a => a.StatusValue == AppointmentStatus.Beklemede && a.AppointmentDate >= now)
-        .OrderBy(a => a.AppointmentDate)
-        .FirstOrDefault();
+    // Mini bar grafik için haftanın en yoğun günü (0'a bölünmeyi engeller).
+    var maxWeek = Model.WeekDistribution.Count > 0 ? Model.WeekDistribution.Max(d => d.Count) : 0;
 
-    var today = now.Date;
-    var weekDiff = (7 + (today.DayOfWeek - DayOfWeek.Monday)) % 7;
-    var weekStart = today.AddDays(-weekDiff);
-    var weekEnd = weekStart.AddDays(6);
+    // KPI ilerleme çubukları çoğunlukla görsel ritim içindir; yalnızca ilki (bugünün
+    // tamamlanma oranı) gerçek veriye bağlıdır, diğerleri dekoratif sabit genişliktedir.
+    var donePct = Model.TodayAppointmentCount > 0 ? doneToday * 100d / Model.TodayAppointmentCount : 0;
+
+    string Pct(double v) => Math.Clamp(v, 0, 100).ToString("0.##", inv);
+
+    string SpeciesTone(PetSpecies s) => s switch
+    {
+        PetSpecies.Kopek => "dog",
+        PetSpecies.Kedi => "cat",
+        PetSpecies.Tavsan => "rab",
+        PetSpecies.Kus => "bird",
+        _ => "oth"
+    };
+
+    string Initial(string name) => string.IsNullOrEmpty(name) ? "?" : name[..1].ToUpper(tr);
 }
 
-<section class="hero-greet fade-up" style="--delay:0ms">
-    <div class="d-flex flex-wrap align-items-start justify-content-between gap-3">
-        <div>
-            <p class="hero-eyebrow mb-1">@now.ToString("d MMMM yyyy, dddd", tr)</p>
-            <h1 class="hero-title mb-0">
-                @greet, bugün
-                <a class="hero-accent" asp-controller="Appointments" asp-action="Index">@Model.TodayAppointmentCount randevu</a>
-                var.
-            </h1>
-            @if (Model.PendingAppointmentCount > 0)
-            {
-                <a class="hero-pending" asp-controller="Appointments" asp-action="List" asp-route-status="@AppointmentStatus.Beklemede">
-                    <i class="bi bi-hourglass-split me-1"></i>@Model.PendingAppointmentCount randevu onay bekliyor
-                </a>
-            }
-        </div>
-        <div class="d-flex gap-2">
-            <a class="btn btn-outline-secondary" asp-controller="Appointments" asp-action="Index">
-                <i class="bi bi-calendar2-week me-1"></i>Haftalık Takvim
-            </a>
-            <a class="btn btn-primary" asp-controller="Appointments" asp-action="Create">
-                <i class="bi bi-plus-lg me-1"></i>Yeni Randevu
-            </a>
-        </div>
-    </div>
-</section>
+<div class="dash-root">
 
-@* --- 2. Metric strip — 3 kart, başlık öncelikli, bağlamsal alt yazılı --- *@
-<div class="card metric-strip fade-up mb-3" style="--delay:80ms">
-    <div class="row g-0">
-        <a class="col metric-cell" asp-controller="Appointments" asp-action="Index">
-            <div class="metric-head">
-                <i class="bi bi-calendar-day"></i>
-                <span>Bugünkü Randevu</span>
-            </div>
-            <div class="metric-value">@Model.TodayAppointmentCount</div>
-            <div class="metric-sub">
-                @if (nextToday is not null)
+    @* --- 1. Hero satırı: durum paneli + hafta şeridi --- *@
+    <section class="dash-hero fade-up" style="--delay:0ms">
+        <div class="dash-status">
+            <p class="dash-status-date">@now.ToString("d MMMM yyyy, dddd", tr)</p>
+            <h1 class="dash-status-title">
+                @if (Model.PendingAppointmentCount > 0)
                 {
-                    <i class="bi bi-clock"></i>
-                    <span>Sonraki: <strong>@nextToday.AppointmentDate.ToString("HH:mm")</strong> · @nextToday.PetName</span>
+                    <text>Bugün @Model.TodayAppointmentCount randevu var, <b>@(Model.PendingAppointmentCount) tanesi</b> onayınızı bekliyor.</text>
                 }
                 else if (Model.TodayAppointmentCount > 0)
                 {
-                    var pendingToday = Model.TodayAppointments.Count(a => a.StatusValue == AppointmentStatus.Beklemede);
-                    if (pendingToday > 0)
-                    {
-                        <i class="bi bi-hourglass-split"></i><span><strong>@pendingToday</strong> randevu hâlâ onay bekliyor</span>
-                    }
-                    else
-                    {
-                        <i class="bi bi-check2-circle"></i><span>Bugünkü randevular tamamlandı</span>
-                    }
+                    <text>Bugün @Model.TodayAppointmentCount randevu var, tümü onaylı.</text>
                 }
                 else
                 {
-                    <i class="bi bi-cup-hot"></i><span>Bugün için randevu yok</span>
+                    <text>Bugün için planlanmış randevu yok.</text>
                 }
-            </div>
-        </a>
-
-        <a class="col metric-cell" asp-controller="Appointments" asp-action="Index">
-            <div class="metric-head">
-                <i class="bi bi-calendar2-week"></i>
-                <span>Haftalık Randevu</span>
-            </div>
-            <div class="metric-value">@Model.ThisWeekAppointmentCount</div>
-            <div class="metric-sub">
-                <i class="bi bi-arrow-left-right"></i>
-                <span>@weekStart.ToString("dd MMM", tr) – @weekEnd.ToString("dd MMM", tr)</span>
-            </div>
-        </a>
-
-        <a class="col metric-cell metric-cell--alert" asp-controller="Appointments" asp-action="List" asp-route-status="@AppointmentStatus.Beklemede">
-            <div class="metric-head">
-                <i class="bi bi-hourglass-split"></i>
-                <span>Onay Bekleyen</span>
-            </div>
-            <div class="metric-value">@Model.PendingAppointmentCount</div>
-            <div class="metric-sub">
-                @if (nextPending is not null)
+            </h1>
+            <p class="dash-status-lead">
+                @if (nextToday is not null)
                 {
-                    <i class="bi bi-clock"></i>
-                    <span>En erken: <strong>@nextPending.AppointmentDate.ToString("dd MMM HH:mm", tr)</strong> · @nextPending.PetName</span>
-                }
-                else if (Model.PendingAppointmentCount == 0)
-                {
-                    <i class="bi bi-check2-circle"></i><span>Tüm randevular onaylı</span>
+                    <text>Sıradaki — <b>@nextToday.AppointmentDate.ToString("HH:mm") · @nextToday.PetName</b> · @nextToday.ServiceName, @nextInMinutes dakika sonra.</text>
                 }
                 else
                 {
-                    <i class="bi bi-info-circle"></i><span>Geçmiş randevular onay bekliyor</span>
+                    <text>Bugün için kalan randevu yok.</text>
+                }
+            </p>
+            <div class="dash-status-actions">
+                <a class="dash-btn dash-btn--light" asp-controller="Appointments" asp-action="List" asp-route-status="@AppointmentStatus.Beklemede">
+                    <i class="bi bi-check2-circle"></i>Onayları İncele
+                </a>
+                <a class="dash-btn dash-btn--ghost" asp-controller="Appointments" asp-action="Create">
+                    <i class="bi bi-plus-lg"></i>Yeni Randevu
+                </a>
+            </div>
+        </div>
+
+        <div class="dash-week">
+            <div class="dash-week-head">
+                <span>Bu hafta</span>
+                <b>@Model.ThisWeekAppointmentCount randevu</b>
+            </div>
+            <div class="dash-week-strip">
+                @foreach (var d in Model.WeekDistribution)
+                {
+                    var h = maxWeek > 0 && d.Count > 0 ? d.Count * 100d / maxWeek : 0;
+                    <div class="dash-day @(d.IsToday ? "is-today" : "") @(d.IsClosed ? "is-closed" : "")">
+                        <div class="dash-day-bar"><span style="height:@Pct(h)%"></span></div>
+                        <div class="dash-day-count">@(d.Count > 0 ? d.Count.ToString(inv) : "–")</div>
+                        <div class="dash-day-label">@d.Label</div>
+                    </div>
                 }
             </div>
-        </a>
-    </div>
-</div>
+        </div>
+    </section>
 
-@* --- 3. Bugünün akışı (dikey program listesi) --- *@
-<div class="card fade-up mb-3" style="--delay:140ms">
-    <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
-        <h2 class="h6 fw-semibold mb-0"><i class="bi bi-clock-history text-primary me-1"></i>Bugünün Akışı</h2>
-        <span class="d-flex align-items-center gap-3">
-            @if (nowInWindow && Model.TodayAppointments.Any())
+    @* --- 2. KPI tile satırı --- *@
+    <section class="dash-kpis fade-up" style="--delay:80ms">
+        <div class="dash-kpi dash-kpi--teal">
+            <div class="dash-kpi-top">
+                <span class="dash-kpi-icon"><i class="bi bi-calendar-day"></i></span>
+                <span class="dash-kpi-label">Bugünkü Randevu</span>
+            </div>
+            <div class="dash-kpi-value">@Model.TodayAppointmentCount</div>
+            <div class="dash-kpi-track"><span style="width:@Pct(donePct)%"></span></div>
+            <div class="dash-kpi-sub">@doneToday tamamlandı</div>
+        </div>
+
+        <div class="dash-kpi dash-kpi--blue">
+            <div class="dash-kpi-top">
+                <span class="dash-kpi-icon"><i class="bi bi-calendar2-week"></i></span>
+                <span class="dash-kpi-label">Bu Hafta</span>
+            </div>
+            <div class="dash-kpi-value">@Model.ThisWeekAppointmentCount</div>
+            <div class="dash-kpi-track"><span style="width:72%"></span></div>
+            <div class="dash-kpi-sub">@weekStart.ToString("dd MMM", tr) – @weekEnd.ToString("dd MMM", tr)</div>
+        </div>
+
+        <div class="dash-kpi dash-kpi--amber">
+            <div class="dash-kpi-top">
+                <span class="dash-kpi-icon"><i class="bi bi-hourglass-split"></i></span>
+                <span class="dash-kpi-label">Onay Bekleyen</span>
+            </div>
+            <div class="dash-kpi-value">@Model.PendingAppointmentCount</div>
+            <div class="dash-kpi-track"><span style="width:35%"></span></div>
+            <div class="dash-kpi-sub">@(Model.PendingAppointmentCount > 0 ? "İşlem gerekiyor" : "Bekleyen yok")</div>
+        </div>
+
+        <div class="dash-kpi dash-kpi--rose">
+            <div class="dash-kpi-top">
+                <span class="dash-kpi-icon"><i class="bi bi-heart-pulse"></i></span>
+                <span class="dash-kpi-label">Kayıtlı Hayvan</span>
+            </div>
+            <div class="dash-kpi-value">@Model.TotalPetCount</div>
+            <div class="dash-kpi-track"><span style="width:88%"></span></div>
+            <div class="dash-kpi-sub">@Model.TotalOwnerCount sahip</div>
+        </div>
+    </section>
+
+    @* --- 3. İçerik satırı: bugünün randevuları + sağ ray --- *@
+    <div class="dash-cols">
+        <section class="dash-panel fade-up" style="--delay:140ms">
+            <div class="dash-panel-head">
+                <h2>Bugünün Randevuları</h2>
+                <a asp-controller="Appointments" asp-action="Index">Tümü <i class="bi bi-arrow-right"></i></a>
+            </div>
+            @if (Model.TodayAppointments.Any())
             {
-                <span class="now-pill"><i class="bi bi-circle-fill text-danger me-1"></i>Şimdi @now.ToString("HH:mm")</span>
-            }
-            <a class="small text-decoration-none" asp-controller="Appointments" asp-action="Index">
-                Haftalık görünüm <i class="bi bi-arrow-right"></i>
-            </a>
-        </span>
-    </div>
-    @if (Model.TodayAppointments.Any())
-    {
-        <ul class="today-schedule list-unstyled mb-0">
-            @{
-                var nowShown = false;
-                for (int i = 0; i < Model.TodayAppointments.Count; i++)
-                {
-                    var a = Model.TodayAppointments[i];
-                    var aEnd = a.AppointmentDate.AddMinutes(a.DurationMinutes);
-                    var isPast = aEnd <= now;
-                    var isCurrent = !isPast && a.AppointmentDate <= now;
-
-                    if (!nowShown && !isPast && !isCurrent && nowInWindow)
+                <div class="dash-appts">
+                    @foreach (var a in Model.TodayAppointments)
                     {
-                        <li class="today-now-divider">
-                            <span class="today-now-label"><i class="bi bi-circle-fill"></i>Şimdi · @now.ToString("HH:mm")</span>
-                        </li>
-                        nowShown = true;
-                    }
-
-                    <li>
-                        <a class="today-item @(isPast ? "is-past" : "") @(isCurrent ? "is-current" : "")"
+                        var aEnd = a.AppointmentDate.AddMinutes(a.DurationMinutes);
+                        var isPast = aEnd <= now;
+                        var isCurrent = !isPast && a.AppointmentDate <= now;
+                        <a class="dash-appt @(isCurrent ? "is-current" : "") @(isPast ? "is-past" : "")"
                            asp-controller="Appointments" asp-action="Details" asp-route-id="@a.Id"
                            aria-label="@a.AppointmentDate.ToString("HH:mm") · @a.PetName · @a.ServiceName (@a.Status)">
-                            <div class="today-rail">
-                                <span class="today-time">@a.AppointmentDate.ToString("HH:mm")</span>
-                                <span class="today-dur">@a.DurationMinutes dk</span>
+                            <div class="dash-appt-time">@a.AppointmentDate.ToString("HH:mm")<i>@a.DurationMinutes dk</i></div>
+                            <div class="dash-avatar dash-avatar--@SpeciesTone(a.Species)" aria-hidden="true">@Initial(a.PetName)</div>
+                            <div class="dash-appt-main">
+                                <div class="dash-appt-pet">@a.PetName <span>· @a.Species.ToText()</span></div>
+                                <div class="dash-appt-svc">@a.ServiceName</div>
+                                <div class="dash-appt-owner"><i class="bi bi-person"></i>@a.OwnerName</div>
                             </div>
-                            <span class="today-marker today-marker--@a.StatusValue.BadgeFlavor()"></span>
-                            <div class="today-body">
-                                <div class="today-headline">@a.PetName <span class="text-muted">· @a.ServiceName</span></div>
-                                <div class="today-meta"><i class="bi bi-person me-1"></i><span class="today-owner">@a.OwnerName</span></div>
-                            </div>
-                            <span class="badge @a.StatusValue.BadgeClass() rounded-pill">@a.Status</span>
-                            <i class="bi bi-chevron-right today-chevron"></i>
+                            <span class="dash-pill dash-pill--@a.StatusValue.BadgeFlavor()">@a.Status</span>
                         </a>
-                    </li>
-                }
-
-                @* Şimdi tüm satırların sonrasına denk geliyorsa en sona koy *@
-                if (!nowShown && nowInWindow)
-                {
-                    <li class="today-now-divider">
-                        <span class="today-now-label"><i class="bi bi-circle-fill"></i>Şimdi · @now.ToString("HH:mm")</span>
-                    </li>
-                }
-            }
-        </ul>
-    }
-    else
-    {
-        <div class="empty-state py-4">
-            <i class="bi bi-cup-hot"></i>
-            <p class="mb-3">Bugün için planlanmış randevu yok.</p>
-            <a class="btn btn-outline-primary btn-sm" asp-controller="Appointments" asp-action="Create">
-                <i class="bi bi-plus-lg me-1"></i>Randevu Oluştur
-            </a>
-        </div>
-    }
-</div>
-
-@* --- 4. İki sütun: Sıradaki Randevular + En Çok Tercih Edilen Hizmetler --- *@
-<div class="row g-3 mb-3">
-    <div class="col-lg-7 fade-up" style="--delay:200ms">
-        <div class="card h-100">
-            <div class="card-header d-flex align-items-center justify-content-between">
-                <h2 class="h6 fw-semibold mb-0"><i class="bi bi-calendar2-week text-primary me-1"></i>Sıradaki Randevular</h2>
-                <span class="text-muted small">Önümüzdeki 7 gün</span>
-            </div>
-            @if (Model.UpcomingAppointments.Any())
-            {
-                <ul class="list-unstyled mb-0 upnext">
-                    @foreach (var a in Model.UpcomingAppointments)
-                    {
-                        <li>
-                            <a class="upnext-row" asp-controller="Appointments" asp-action="Details" asp-route-id="@a.Id">
-                                <div class="upnext-date">
-                                    <div class="upnext-day">@a.AppointmentDate.ToString("dd")</div>
-                                    <div class="upnext-month">@a.AppointmentDate.ToString("MMM", tr).ToUpper(tr)</div>
-                                </div>
-                                <div class="upnext-main">
-                                    <div class="upnext-title">@a.PetName <span class="text-muted">· @a.ServiceName</span></div>
-                                    <div class="upnext-sub">
-                                        @a.AppointmentDate.ToString("HH:mm") · @a.OwnerName
-                                    </div>
-                                </div>
-                                <span class="badge @a.StatusValue.BadgeClass() rounded-pill">@a.Status</span>
-                            </a>
-                        </li>
                     }
-                </ul>
+                </div>
             }
             else
             {
                 <div class="empty-state py-4">
-                    <i class="bi bi-calendar2-x"></i>
-                    <p class="mb-3">Önümüzdeki 7 günde planlanmış randevu yok.</p>
+                    <i class="bi bi-cup-hot"></i>
+                    <p class="mb-3">Bugün için planlanmış randevu yok.</p>
                     <a class="btn btn-outline-primary btn-sm" asp-controller="Appointments" asp-action="Create">
                         <i class="bi bi-plus-lg me-1"></i>Randevu Oluştur
                     </a>
                 </div>
             }
-            <div class="card-footer bg-white mt-auto">
-                <a class="small text-decoration-none d-inline-flex align-items-center gap-1" asp-controller="Appointments" asp-action="Index">
-                    Tüm randevuları gör <i class="bi bi-arrow-right"></i>
-                </a>
-            </div>
-        </div>
-    </div>
+        </section>
 
-    <div class="col-lg-5 fade-up" style="--delay:260ms">
-        <div class="card h-100">
-            <div class="card-header d-flex align-items-center justify-content-between">
-                <h2 class="h6 fw-semibold mb-0"><i class="bi bi-graph-up text-primary me-1"></i>En Çok Tercih Edilen Hizmetler</h2>
-                <span class="text-muted small">Son 30 gün</span>
-            </div>
-            <div class="card-body">
+        <aside class="dash-rail">
+            <section class="dash-panel fade-up" style="--delay:200ms">
+                <div class="dash-panel-head">
+                    <h2>En Çok Tercih Edilen</h2>
+                    <span class="dash-tag">30 gün</span>
+                </div>
                 @if (Model.MostRequestedServices.Any())
                 {
-                    var maxCount = Model.MostRequestedServices.Max(s => s.Count);
+                    var maxSvc = Model.MostRequestedServices.Max(s => s.Count);
                     var rank = 0;
-                    foreach (var s in Model.MostRequestedServices)
-                    {
-                        var pct = (s.Count * 100d) / Math.Max(1, maxCount);
-                        <div class="topsvc @(rank == 0 ? "is-top" : "")">
-                            <div class="topsvc-head">
-                                <span class="topsvc-name">@s.ServiceName</span>
-                                <span class="topsvc-count">@s.Count</span>
+                    <div class="dash-svcs">
+                        @foreach (var s in Model.MostRequestedServices)
+                        {
+                            var w = s.Count * 100d / Math.Max(1, maxSvc);
+                            <div class="dash-svc">
+                                <div class="dash-rank">@(rank + 1)</div>
+                                <div class="dash-svc-body">
+                                    <div class="dash-svc-head"><span>@s.ServiceName</span><b>@s.Count</b></div>
+                                    <div class="dash-svc-bar"><span style="width:@Pct(w)%"></span></div>
+                                </div>
                             </div>
-                            <div class="topsvc-bar" aria-hidden="true">
-                                <div class="topsvc-fill" style="width:@Pct(pct)%;"></div>
-                            </div>
-                        </div>
-                        rank++;
-                    }
+                            rank++;
+                        }
+                    </div>
                 }
                 else
                 {
@@ -288,51 +220,40 @@
                         <p class="mb-0">Son 30 günde randevu bulunmuyor.</p>
                     </div>
                 }
-            </div>
-        </div>
-    </div>
-</div>
+            </section>
 
-@* --- 5. Sessiz hızlı erişim tile'ları --- *@
-<div class="row g-3 fade-up" style="--delay:320ms">
-    <div class="col-6 col-lg-3">
-        <a class="quiet-tile" asp-controller="Owners" asp-action="Index">
-            <span class="quiet-tile-icon"><i class="bi bi-person-lines-fill"></i></span>
-            <span class="quiet-tile-body">
-                <span class="quiet-tile-title">Sahipler</span>
-                <span class="quiet-tile-meta">@Model.TotalOwnerCount kayıt</span>
-            </span>
-            <i class="bi bi-arrow-right quiet-tile-arrow"></i>
-        </a>
-    </div>
-    <div class="col-6 col-lg-3">
-        <a class="quiet-tile" asp-controller="Pets" asp-action="Index">
-            <span class="quiet-tile-icon"><i class="bi bi-heart-pulse"></i></span>
-            <span class="quiet-tile-body">
-                <span class="quiet-tile-title">Hayvanlar</span>
-                <span class="quiet-tile-meta">@Model.TotalPetCount kayıt</span>
-            </span>
-            <i class="bi bi-arrow-right quiet-tile-arrow"></i>
-        </a>
-    </div>
-    <div class="col-6 col-lg-3">
-        <a class="quiet-tile" asp-controller="Services" asp-action="Index">
-            <span class="quiet-tile-icon"><i class="bi bi-clipboard2-check"></i></span>
-            <span class="quiet-tile-body">
-                <span class="quiet-tile-title">Hizmetler</span>
-                <span class="quiet-tile-meta">Katalog</span>
-            </span>
-            <i class="bi bi-arrow-right quiet-tile-arrow"></i>
-        </a>
-    </div>
-    <div class="col-6 col-lg-3">
-        <a class="quiet-tile" asp-controller="Appointments" asp-action="Index">
-            <span class="quiet-tile-icon"><i class="bi bi-calendar2-week"></i></span>
-            <span class="quiet-tile-body">
-                <span class="quiet-tile-title">Randevular</span>
-                <span class="quiet-tile-meta">Tüm randevular</span>
-            </span>
-            <i class="bi bi-arrow-right quiet-tile-arrow"></i>
-        </a>
+            <section class="dash-panel fade-up" style="--delay:260ms">
+                <div class="dash-panel-head"><h2>Yaklaşan</h2></div>
+                @if (Model.UpcomingAppointments.Any())
+                {
+                    <ul class="dash-up">
+                        @foreach (var u in Model.UpcomingAppointments.Take(3))
+                        {
+                            <li>
+                                <a class="dash-up-row" asp-controller="Appointments" asp-action="Details" asp-route-id="@u.Id"
+                                   aria-label="@u.AppointmentDate.ToString("d MMMM", tr) @u.AppointmentDate.ToString("HH:mm") · @u.PetName · @u.ServiceName (@u.Status)">
+                                    <div class="dash-up-date">
+                                        <b>@u.AppointmentDate.ToString("dd")</b>
+                                        <span>@u.AppointmentDate.ToString("MMM", tr).ToUpper(tr)</span>
+                                    </div>
+                                    <div class="dash-up-main">
+                                        <b>@u.PetName</b>
+                                        <span>@u.AppointmentDate.ToString("HH:mm") · @u.ServiceName</span>
+                                    </div>
+                                    <span class="dash-pill dash-pill--@u.StatusValue.BadgeFlavor()">@u.Status</span>
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <div class="empty-state py-3">
+                        <i class="bi bi-calendar2-x"></i>
+                        <p class="mb-0">Yaklaşan randevu yok.</p>
+                    </div>
+                }
+            </section>
+        </aside>
     </div>
 </div>

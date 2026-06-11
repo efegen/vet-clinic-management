@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Mvc.Rendering;
 using VetClinic.Web.Helpers;
 using VetClinic.Web.Models.Entities;
 using VetClinic.Web.Models.Enums;
@@ -140,13 +139,13 @@ public class AppointmentService : IAppointmentService
     public async Task PopulateOptionsAsync(AppointmentCreateEditViewModel vm)
     {
         var pets = await _petRepo.GetAllWithOwnerAsync();
-        vm.PetOptions = pets
-            .Select(p => new SelectListItem
-            {
-                Value = p.Id.ToString(),
-                Text = $"{p.Name} — {p.Owner.FullName}",
-                Selected = p.Id == vm.PetId
-            })
+        vm.PetChoices = pets
+            .Select(p => new PetChoice(
+                p.Id,
+                p.Name,
+                p.Owner.FullName,
+                p.Species.ToText(),
+                p.Species.BadgeClass()))
             .ToList();
 
         var services = (await _serviceRepo.GetActiveAsync()).ToList();
@@ -157,13 +156,8 @@ public class AppointmentService : IAppointmentService
             if (current is not null) services.Insert(0, current);
         }
 
-        vm.ServiceOptions = services
-            .Select(s => new SelectListItem
-            {
-                Value = s.Id.ToString(),
-                Text = $"{s.Name} ({s.DurationMinutes} dk — {s.Price:N2} TL)",
-                Selected = s.Id == vm.ServiceId
-            })
+        vm.ServiceChoices = services
+            .Select(s => new ServiceChoice(s.Id, s.Name, s.DurationMinutes, s.Price))
             .ToList();
     }
 
@@ -280,6 +274,7 @@ public class AppointmentService : IAppointmentService
         AppointmentDate = a.AppointmentDate,
         PetName = a.Pet.Name,
         PetId = a.PetId,
+        Species = a.Pet.Species,
         OwnerName = a.Pet.Owner.FullName,
         OwnerId = a.Pet.OwnerId,
         ServiceName = a.Service.Name,

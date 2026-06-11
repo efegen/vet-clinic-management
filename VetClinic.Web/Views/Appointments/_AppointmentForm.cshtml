@@ -1,50 +1,90 @@
 @model AppointmentCreateEditViewModel
+@{
+    var isCreate = !Model.Id.HasValue;
+}
 
 <input type="hidden" asp-for="Id" />
 
 <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
 
-<div class="row g-3">
-    <div class="col-md-6">
-        <label asp-for="PetId" class="form-label">Hayvan <span class="required-mark">*</span></label>
-        <select asp-for="PetId" asp-items="Model.PetOptions" class="form-select">
-            <option value="">— Hayvan seçin —</option>
-        </select>
-        <span asp-validation-for="PetId" class="text-danger small"></span>
-    </div>
-
-    <div class="col-md-6">
-        <label asp-for="ServiceId" class="form-label">Hizmet <span class="required-mark">*</span></label>
-        <select asp-for="ServiceId" asp-items="Model.ServiceOptions" class="form-select">
-            <option value="">— Hizmet seçin —</option>
-        </select>
-        <span asp-validation-for="ServiceId" class="text-danger small"></span>
-    </div>
-
-    <div class="col-md-6">
-        <label asp-for="AppointmentDate" class="form-label">Randevu Tarihi / Saati <span class="required-mark">*</span></label>
-        <input asp-for="AppointmentDate" asp-format="{0:yyyy-MM-ddTHH:mm}" type="datetime-local" class="form-control" />
-        <span asp-validation-for="AppointmentDate" class="text-danger small"></span>
-        <div class="form-text">Mesai saatleri 09:00–19:00. Pazar günleri randevu alınamaz.</div>
-    </div>
-
-    @if (Model.Id.HasValue)
-    {
+<div class="form-section">
+    <div class="form-section-title"><i class="bi bi-heart-pulse"></i> Hasta &amp; Hizmet</div>
+    <div class="row g-3">
         <div class="col-md-6">
-            <label asp-for="Status" class="form-label">Durum</label>
-            <select asp-for="Status" class="form-select">
-                @foreach (var st in Enum.GetValues<AppointmentStatus>())
-                {
-                    <option value="@st">@st.ToText()</option>
-                }
-            </select>
-            <span asp-validation-for="Status" class="text-danger small"></span>
+            <label asp-for="PetId" class="form-label">Hayvan <span class="required-mark">*</span></label>
+            <div class="input-group">
+                <span class="input-group-text bg-white text-muted"><i class="bi bi-heart-pulse"></i></span>
+                <select asp-for="PetId" class="form-select">
+                    <option value="">— Hayvan seçin —</option>
+                    @foreach (var p in Model.PetChoices)
+                    {
+                        <option value="@p.Id" data-name="@p.Name" data-owner="@p.OwnerName"
+                                data-species="@p.Species" data-badge="@p.SpeciesBadge">@p.Name — @p.OwnerName</option>
+                    }
+                </select>
+            </div>
+            <span asp-validation-for="PetId" class="text-danger small"></span>
+            @if (Model.PetChoices.Count == 0)
+            {
+                <div class="form-text text-warning-emphasis">
+                    <i class="bi bi-exclamation-triangle me-1"></i>Henüz hayvan kaydı yok.
+                    <a asp-controller="Pets" asp-action="Create">Önce bir hayvan ekleyin.</a>
+                </div>
+            }
         </div>
-    }
 
-    <div class="col-12">
-        <label asp-for="Notes" class="form-label">Notlar</label>
-        <textarea asp-for="Notes" class="form-control" rows="3" placeholder="Hekim notu veya ek bilgi (opsiyonel)"></textarea>
-        <span asp-validation-for="Notes" class="text-danger small"></span>
+        <div class="col-md-6">
+            <label asp-for="ServiceId" class="form-label">Hizmet <span class="required-mark">*</span></label>
+            <div class="input-group">
+                <span class="input-group-text bg-white text-muted"><i class="bi bi-clipboard2-check"></i></span>
+                <select asp-for="ServiceId" class="form-select">
+                    <option value="">— Hizmet seçin —</option>
+                    @foreach (var s in Model.ServiceChoices)
+                    {
+                        <option value="@s.Id" data-name="@s.Name" data-duration="@s.DurationMinutes"
+                                data-price="@s.Price.ToPriceDisplay()">@s.Name (@s.DurationMinutes dk — @s.Price.ToPriceDisplay())</option>
+                    }
+                </select>
+            </div>
+            <span asp-validation-for="ServiceId" class="text-danger small"></span>
+        </div>
     </div>
+</div>
+
+<div class="form-section">
+    <div class="form-section-title"><i class="bi bi-calendar-event"></i> Zamanlama</div>
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label asp-for="AppointmentDate" class="form-label">Randevu Tarihi / Saati <span class="required-mark">*</span></label>
+            <div class="input-group">
+                <span class="input-group-text bg-white text-muted"><i class="bi bi-calendar-event"></i></span>
+                <input asp-for="AppointmentDate" asp-format="{0:yyyy-MM-ddTHH:mm}" type="datetime-local" class="form-control"
+                       min="@(isCreate ? DateTime.Now.ToString("yyyy-MM-ddTHH:mm") : null)" />
+            </div>
+            <span asp-validation-for="AppointmentDate" class="text-danger small"></span>
+            <div class="form-text"><i class="bi bi-clock me-1"></i>Mesai saatleri 09:00–19:00. Pazar günleri randevu alınamaz.</div>
+        </div>
+
+        @if (Model.Id.HasValue)
+        {
+            <div class="col-md-6">
+                <label asp-for="Status" class="form-label">Durum</label>
+                <select asp-for="Status" class="form-select">
+                    @foreach (var st in Enum.GetValues<AppointmentStatus>())
+                    {
+                        <option value="@st">@st.ToText()</option>
+                    }
+                </select>
+                <span asp-validation-for="Status" class="text-danger small"></span>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="form-section mb-0">
+    <div class="form-section-title"><i class="bi bi-journal-text"></i> Notlar</div>
+    <label asp-for="Notes" class="form-label">Not <span class="text-muted fw-normal">(opsiyonel)</span></label>
+    <textarea asp-for="Notes" class="form-control" rows="3" maxlength="500"
+              placeholder="Hekim notu veya ek bilgi"></textarea>
+    <span asp-validation-for="Notes" class="text-danger small"></span>
 </div>

@@ -8,6 +8,7 @@ public class AppointmentListViewModel
     public DateTime AppointmentDate { get; set; }
     public string PetName { get; set; } = "";
     public int PetId { get; set; }
+    public PetSpecies Species { get; set; }   // Dashboard avatar tonu + "· Tür" metni için
     public string OwnerName { get; set; } = "";
     public int OwnerId { get; set; }
     public string ServiceName { get; set; } = "";

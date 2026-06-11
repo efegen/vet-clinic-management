@@ -9,28 +9,172 @@
             <i class="bi bi-arrow-left me-1"></i>Randevular
         </a>
         <h1 class="mt-1"><i class="bi bi-calendar2-plus text-primary"></i> Yeni Randevu</h1>
+        <p class="text-muted small mb-0 mt-1">Hayvan, hizmet ve zaman seçin; özet sağda anlık güncellenir.</p>
     </div>
 </div>
 
-<div class="row justify-content-center">
-    <div class="col-lg-9 col-xl-8">
-        <div class="card">
-            <div class="card-body p-4">
-                <form asp-action="Create" method="post">
+<form asp-action="Create" method="post" id="appointmentForm">
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body p-4">
                     <partial name="_AppointmentForm" model="Model" />
-
-                    <div class="d-flex justify-content-end gap-2 mt-4">
-                        <a class="btn btn-light border" asp-action="Index">İptal</a>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-check-lg me-1"></i>Kaydet
-                        </button>
-                    </div>
-                </form>
+                </div>
+                <div class="card-footer bg-white d-flex justify-content-end gap-2 py-3">
+                    <a class="btn btn-light border" asp-action="Index">İptal</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg me-1"></i>Randevuyu Kaydet
+                    </button>
+                </div>
             </div>
         </div>
+
+        <aside class="col-lg-4">
+            <div class="appt-summary">
+                <div class="card mb-3">
+                    <div class="card-header"><i class="bi bi-clipboard2-check me-1 text-primary"></i>Randevu Özeti</div>
+                    <div class="card-body">
+                        <div class="appt-summary-empty" data-summary-empty>
+                            <i class="bi bi-calendar2-plus"></i>
+                            <p class="mb-0">Seçimlerinizi yaptıkça randevu özeti burada görünür.</p>
+                        </div>
+
+                        <div class="appt-summary-list d-none" data-summary-filled>
+                            <div class="appt-sum-row">
+                                <span class="appt-sum-label"><i class="bi bi-heart-pulse"></i>Hayvan</span>
+                                <span class="appt-sum-value d-inline-flex align-items-center gap-2 justify-content-end">
+                                    <span data-sum="pet">—</span>
+                                    <span class="badge d-none" data-sum="species"></span>
+                                </span>
+                            </div>
+                            <div class="appt-sum-row">
+                                <span class="appt-sum-label"><i class="bi bi-person"></i>Sahip</span>
+                                <span class="appt-sum-value" data-sum="owner">—</span>
+                            </div>
+                            <div class="appt-sum-row">
+                                <span class="appt-sum-label"><i class="bi bi-clipboard2-check"></i>Hizmet</span>
+                                <span class="appt-sum-value" data-sum="service">—</span>
+                            </div>
+                            <div class="appt-sum-row">
+                                <span class="appt-sum-label"><i class="bi bi-calendar-event"></i>Tarih</span>
+                                <span class="appt-sum-value" data-sum="date">—</span>
+                            </div>
+                            <div class="appt-sum-row">
+                                <span class="appt-sum-label"><i class="bi bi-clock"></i>Saat</span>
+                                <span class="appt-sum-value" data-sum="time">—</span>
+                            </div>
+                            <div class="appt-sum-row">
+                                <span class="appt-sum-label"><i class="bi bi-hourglass-split"></i>Süre</span>
+                                <span class="appt-sum-value" data-sum="duration">—</span>
+                            </div>
+                            <div class="appt-sum-row appt-sum-row--total">
+                                <span class="appt-sum-label">Tahmini Ücret</span>
+                                <span class="appt-sum-price" data-sum="price">—</span>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-warning d-flex gap-2 py-2 px-3 mt-3 mb-0 small d-none" data-summary-warn>
+                            <i class="bi bi-exclamation-triangle-fill flex-shrink-0"></i>
+                            <span data-warn-text></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header"><i class="bi bi-info-circle me-1 text-primary"></i>Çalışma Kuralları</div>
+                    <ul class="list-group list-group-flush small">
+                        <li class="list-group-item d-flex align-items-center gap-2">
+                            <i class="bi bi-clock text-muted"></i><span>Mesai saatleri <strong>09:00 – 19:00</strong></span>
+                        </li>
+                        <li class="list-group-item d-flex align-items-center gap-2">
+                            <i class="bi bi-calendar-x text-muted"></i><span>Pazar günleri <strong>kapalı</strong></span>
+                        </li>
+                        <li class="list-group-item d-flex align-items-center gap-2">
+                            <i class="bi bi-hourglass-split text-muted"></i><span>Geçmiş bir tarihe randevu oluşturulamaz</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </aside>
     </div>
-</div>
+</form>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            var pet = document.getElementById("PetId");
+            var svc = document.getElementById("ServiceId");
+            var date = document.getElementById("AppointmentDate");
+            var emptyBox = document.querySelector("[data-summary-empty]");
+            var filledBox = document.querySelector("[data-summary-filled]");
+            var warnBox = document.querySelector("[data-summary-warn]");
+            var warnText = warnBox ? warnBox.querySelector("[data-warn-text]") : null;
+            if (!pet || !svc || !date || !filledBox) return;
+
+            var days = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];
+            var OPEN = 9 * 60, CLOSE = 19 * 60;
+
+            function pad(n) { return n < 10 ? "0" + n : "" + n; }
+            function selected(sel) { return sel.value ? sel.options[sel.selectedIndex] : null; }
+            function set(name, value) {
+                var el = filledBox.querySelector('[data-sum="' + name + '"]');
+                if (el) el.textContent = value;
+            }
+            function fmtDate(d) { return days[d.getDay()] + ", " + pad(d.getDate()) + "." + pad(d.getMonth() + 1) + "." + d.getFullYear(); }
+            function fmtTime(d) { return pad(d.getHours()) + ":" + pad(d.getMinutes()); }
+
+            function update() {
+                var p = selected(pet);
+                var s = selected(svc);
+                var start = date.value ? new Date(date.value) : null;
+                var startValid = start && !isNaN(start.getTime());
+                var dur = s ? parseInt(s.getAttribute("data-duration"), 10) : null;
+                var end = (startValid && dur) ? new Date(start.getTime() + dur * 60000) : null;
+
+                var hasAny = p || s || startValid;
+                emptyBox.classList.toggle("d-none", !!hasAny);
+                filledBox.classList.toggle("d-none", !hasAny);
+
+                // Hayvan + tür rozeti
+                set("pet", p ? p.getAttribute("data-name") : "—");
+                var badge = filledBox.querySelector('[data-sum="species"]');
+                if (badge) {
+                    if (p) {
+                        badge.textContent = p.getAttribute("data-species");
+                        badge.className = "badge " + (p.getAttribute("data-badge") || "text-bg-secondary");
+                    } else {
+                        badge.className = "badge d-none";
+                        badge.textContent = "";
+                    }
+                }
+                set("owner", p ? p.getAttribute("data-owner") : "—");
+                set("service", s ? s.getAttribute("data-name") : "—");
+                set("date", startValid ? fmtDate(start) : "—");
+                set("time", startValid ? (fmtTime(start) + (end ? " – " + fmtTime(end) : "")) : "—");
+                set("duration", dur ? dur + " dk" : "—");
+                set("price", s ? s.getAttribute("data-price") : "—");
+
+                // Mesai kuralı uyarıları (sunucu da doğrular; bu yalnızca ön bilgilendirme)
+                var warns = [];
+                if (startValid) {
+                    if (start.getDay() === 0) warns.push("Pazar günleri randevu alınamaz.");
+                    if (start.getTime() < Date.now()) warns.push("Seçilen tarih geçmişte kalıyor.");
+                    var startMin = start.getHours() * 60 + start.getMinutes();
+                    if (startMin < OPEN || startMin > CLOSE) warns.push("Saat 09:00–19:00 aralığı dışında.");
+                    if (end && (end.getDate() !== start.getDate() || end.getHours() * 60 + end.getMinutes() > CLOSE)) {
+                        warns.push("Hizmet süresi mesai bitişini (19:00) aşıyor.");
+                    }
+                }
+                if (warnBox) {
+                    warnBox.classList.toggle("d-none", warns.length === 0);
+                    if (warnText) warnText.textContent = warns.join(" ");
+                }
+            }
+
+            [pet, svc].forEach(function (el) { el.addEventListener("change", update); });
+            date.addEventListener("input", update);
+            update();
+        })();
+    </script>
 }

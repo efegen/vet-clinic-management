@@ -108,6 +108,11 @@ public class AppointmentRepository : Repository<Appointment>, IAppointmentReposi
             .CountAsync(a => a.AppointmentDate >= dayStart && a.AppointmentDate < dayEnd);
     }
 
-    public async Task<int> GetCountByStatusAsync(AppointmentStatus status)
-        => await _context.Appointments.CountAsync(a => a.Status == status);
+    public async Task<int> GetCountByStatusAsync(AppointmentStatus status, DateTime? fromDate = null)
+    {
+        var q = _context.Appointments.Where(a => a.Status == status);
+        if (fromDate.HasValue)
+            q = q.Where(a => a.AppointmentDate >= fromDate.Value.Date);
+        return await q.CountAsync();
+    }
 }

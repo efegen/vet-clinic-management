@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using VetClinic.Web.Models.Enums;
 
 namespace VetClinic.Web.ViewModels.Appointments;
@@ -28,7 +27,14 @@ public class AppointmentCreateEditViewModel
     [Display(Name = "Notlar")]
     public string? Notes { get; set; }
 
-    // Dropdown'lar
-    public List<SelectListItem> PetOptions { get; set; } = new();
-    public List<SelectListItem> ServiceOptions { get; set; } = new();
+    // Dropdown verileri. Seçeneklere gömülen metadata (data-*) sağdaki canlı
+    // randevu özetini (bitiş saati, süre, tahmini ücret, tür rozeti) JS ile besler.
+    public List<PetChoice> PetChoices { get; set; } = new();
+    public List<ServiceChoice> ServiceChoices { get; set; } = new();
 }
+
+// Hayvan seçeneği + canlı önizleme için sahip adı ve tür rozeti bilgisi.
+public record PetChoice(int Id, string Name, string OwnerName, string Species, string SpeciesBadge);
+
+// Hizmet seçeneği + bitiş saati ve tahmini ücret hesaplaması için süre/ücret.
+public record ServiceChoice(int Id, string Name, int DurationMinutes, decimal Price);

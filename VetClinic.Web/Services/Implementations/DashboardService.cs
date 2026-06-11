@@ -40,13 +40,29 @@ public class DashboardService : IDashboardService
         var weekList = (await _appointmentRepo.GetByDateRangeAsync(weekStart, EndOfDay(weekEnd))).ToList();
         var upcomingList = (await _appointmentRepo.GetByDateRangeAsync(today.AddDays(1), EndOfDay(today.AddDays(7)))).ToList();
 
+        // Hafta şeridi: Pzt..Paz, her gün için randevu sayısı (mini bar grafik).
+        var dayLabels = new[] { "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz" };
+        var weekDistribution = new List<DayCountItem>(7);
+        for (int i = 0; i < 7; i++)
+        {
+            var day = weekStart.AddDays(i);
+            weekDistribution.Add(new DayCountItem
+            {
+                Day = day.DayOfWeek,
+                Label = dayLabels[i],
+                Count = weekList.Count(a => a.AppointmentDate.Date == day),
+                IsToday = day == today,
+                IsClosed = day.DayOfWeek == DayOfWeek.Sunday   // Spec §8.4: Pazar kapalı.
+            });
+        }
+
         return new DashboardViewModel
         {
             TodayAppointmentCount = await _appointmentRepo.GetCountByDateAsync(today),
             ThisWeekAppointmentCount = weekList.Count,
             TotalOwnerCount = await _ownerRepo.GetTotalCountAsync(),
             TotalPetCount = await _petRepo.GetTotalCountAsync(),
-            PendingAppointmentCount = await _appointmentRepo.GetCountByStatusAsync(AppointmentStatus.Beklemede),
+            PendingAppointmentCount = await _appointmentRepo.GetCountByStatusAsync(AppointmentStatus.Beklemede, today),
 
             TodayAppointments = todayList
                 .OrderBy(a => a.AppointmentDate)
@@ -60,7 +76,9 @@ public class DashboardService : IDashboardService
                 .Select(MapToList)
                 .ToList(),
 
-            MostRequestedServices = await _serviceRepo.GetTopRequestedAsync(days: 30, top: 5)
+            MostRequestedServices = await _serviceRepo.GetTopRequestedAsync(days: 30, top: 5),
+
+            WeekDistribution = weekDistribution
         };
     }
 
@@ -72,6 +90,7 @@ public class DashboardService : IDashboardService
         AppointmentDate = a.AppointmentDate,
         PetName = a.Pet.Name,
         PetId = a.PetId,
+        Species = a.Pet.Species,
         OwnerName = a.Pet.Owner.FullName,
         OwnerId = a.Pet.OwnerId,
         ServiceName = a.Service.Name,

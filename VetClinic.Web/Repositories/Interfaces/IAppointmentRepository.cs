@@ -16,5 +16,5 @@ public interface IAppointmentRepository : IRepository<Appointment>
     Task<IEnumerable<Appointment>> GetByPetIdAsync(int petId);
     Task<IEnumerable<Appointment>> GetConflictingAsync(DateTime requestedStart, DateTime requestedEnd, int? excludeId = null);
     Task<int> GetCountByDateAsync(DateTime date);
-    Task<int> GetCountByStatusAsync(AppointmentStatus status);
+    Task<int> GetCountByStatusAsync(AppointmentStatus status, DateTime? fromDate = null);
 }

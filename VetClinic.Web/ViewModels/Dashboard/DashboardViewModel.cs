@@ -13,4 +13,5 @@ public class DashboardViewModel
     public List<AppointmentListViewModel> TodayAppointments { get; set; } = new();
     public List<AppointmentListViewModel> UpcomingAppointments { get; set; } = new();   // 7 günlük
     public List<TopServiceItem> MostRequestedServices { get; set; } = new();            // Son 30 gün
+    public List<DayCountItem> WeekDistribution { get; set; } = new();                   // Pzt..Paz, 7 öğe (hafta şeridi)
 }
